@@ -7,6 +7,7 @@ __description__ = "Check IP addresses against blacklists from various sources."
 import argparse
 import json
 import os
+import platform
 import random
 import re
 import sys
@@ -49,6 +50,12 @@ class ProcessBL():
         ]
         use_headers = {'user-agent': random.choice(ua_list)}
         return use_headers
+    
+    def clr_scrn(self):
+        if platform.system() == 'Windows':
+            os.system('cls')
+        else:
+            os.system('clear')
 
     def get_list(self, url):
         # Exclude IP if 1st and last octet are zero
@@ -86,6 +93,7 @@ class ProcessBL():
         try:
             with open(BLACKLIST) as json_file:
                 data = json.load(json_file)
+                self.clr_scrn()
                 print(f"\n{tc.BOLD}{'LIST':25} COUNT{tc.RESET}")
                 print("-" * 35)
                 self.sort_list(data)
@@ -100,7 +108,7 @@ class ProcessBL():
         with open(BLACKLIST, 'w') as json_file:
             bl_dict["BLACKLIST"] = {}
             for name, url in self.read_list():
-                print(f"  {tc.PROCESSING} {name:20}")
+                print(f"  {tc.PROCESSING} {name:20}", end='\t\r')
                 bl_dict["BLACKLIST"][name] = self.get_list(url)  # nopep8
 
             # Remove duplicate IP addresses and update
