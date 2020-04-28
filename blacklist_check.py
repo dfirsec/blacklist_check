@@ -50,7 +50,7 @@ class ProcessBL():
         ]
         use_headers = {'user-agent': random.choice(ua_list)}
         return use_headers
-    
+
     def clr_scrn(self):
         if platform.system() == 'Windows':
             os.system('cls')
@@ -84,9 +84,9 @@ class ProcessBL():
         sort_name = sorted((name, ip_cnt) for (name, ip_cnt) in data["BLACKLIST"].items())  # nopep8
         for i in sort_name:
             try:
-                print(f"{i[0]:25}{len(i[1])}")
+                print(f"{i[0]:23}: {len(i[1]):<6,}")
             except TypeError:
-                print(f"{i[0]:25}{tc.GRAY}[DOWNLOAD ERROR]{tc.RESET}")
+                print(f"{i[0]:23}: {tc.GRAY}[DOWNLOAD ERROR]{tc.RESET}")
                 continue
 
     def list_count(self, opt=None):
@@ -104,7 +104,8 @@ class ProcessBL():
 
     def update_list(self):
         bl_dict = dict()
-        print(f"{tc.GREEN} [ Downloading ]")
+
+        print(f"{tc.GREEN} [ Updating ]")
         with open(BLACKLIST, 'w') as json_file:
             bl_dict["BLACKLIST"] = {}
             for name, url in self.read_list():
@@ -165,10 +166,10 @@ class ProcessBL():
                 matches = set(IPS) & set(bl_ip)
                 for ip in matches:
                     if whois:
-                        print(f"{tc.BLACKLISTED} {ip:15} {self.geo_locate(ip):25} {self.whois_ip(ip):10} {tc.YELLOW}Blacklist: {name}{tc.RESET}")  # nopep8
+                        print(f"{tc.BLACKLISTED}{ip:12} | {self.geo_locate(ip):25} | {self.whois_ip(ip):10} |{tc.YELLOW} Blacklist: {name}{tc.RESET}")  # nopep8
                         found.append(ip)
                     else:
-                        print(f"{tc.BLACKLISTED} {ip:15} {self.geo_locate(ip):30} {tc.YELLOW}Blacklist: {name}{tc.RESET}")  # nopep8
+                        print(f"{tc.BLACKLISTED}{ip:12} | {self.geo_locate(ip):30}|{tc.YELLOW} Blacklist: {name}{tc.RESET}")  # nopep8
                         found.append(ip)
             except ValueError:
                 print(f"{tc.WARNING} {'INVALID IP':12} {ip}")
@@ -283,7 +284,8 @@ def main(update, show, query, whois, file, insert, remove):
             except ValueError:
                 print(f"{tc.WARNING} {'INVALID IP':12} {arg}")
         if whois:
-            print(f"{tc.DOTSEP}\n{tc.GREEN}[ Performing IP whois lookup ]{tc.RESET}\n")
+            print(
+                f"{tc.DOTSEP}\n{tc.GREEN}[ Performing IP whois lookup ]{tc.RESET}\n")
             pbl.ip_matches(IPS, whois=whois)
         else:
             pbl.ip_matches(IPS)
@@ -308,7 +310,7 @@ if __name__ == "__main__":
      v{__version__}
     '''
 
-    print(tc.CYAN + banner + tc.RESET)
+    print(f"{tc.CYAN}{banner}{tc.RESET}")
 
     parser = argparse.ArgumentParser(description="IP Blacklist Check")
     parser.add_argument('-u', dest='update', action='store_true',
