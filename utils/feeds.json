@@ -1,7 +1,7 @@
 {
     "Blacklist Feeds": {
         "Alien Vault Reputation": "http://reputation.alienvault.com/reputation.data",
-        "Bambenek Consulting": "http://osint.bambenekconsulting.com/feeds/c2-ipmasterlist.txt",
+        "Bambenek Consulting": "https://osint.bambenekconsulting.com/feeds/c2-masterlist.txt",
         "Bitcoin Nodes": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/bitcoin_nodes.ipset",
         "Blocklist DE": "http://www.blocklist.de/lists/all.txt",
         "Bot Scout IPs": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/botscout.ipset",
@@ -29,7 +29,7 @@
         "Threat Crowd": "https://www.threatcrowd.org/feeds/ips.txt",
         "Threatweb Botnet IPs": "https://www.threatweb.com/access/Botnet-IPs-High_Confidence_BL.txt",
         "Threatweb Watchlist": "https://www.threatweb.com/access/SIEM/OPTIV_HIGH_CONFIDENCE_SIEM_IP_WATCHLIST.txt",
-        "URL Haus": "https://urlhaus.abuse.ch/downloads/csv/",
+        "URL Haus": "https://urlhaus.abuse.ch/downloads/csv_recent/",
         "Windows SpyBlocker": "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/firewall/extra.txt"
     }
 }
