@@ -7,7 +7,8 @@ init()
 
 class Termcolor:
     # Unicode Symbols and colors
-    BOLD = Style.BRIGHT
+    BOLD = Fore.LIGHTWHITE_EX
+    BLUE = Fore.LIGHTBLUE_EX
     CYAN = Fore.CYAN
     GREEN = Fore.GREEN
     MAGENTA = Fore.MAGENTA
@@ -21,9 +22,9 @@ class Termcolor:
     ERROR = RED + "\u2718" + RESET
     QUESTION = YELLOW + "\uFF1F" + RESET
     DOWNLOAD_ERR = f"{YELLOW} [DOWNLOAD ERROR]{RESET}"
-    SCANNER = f"{WARNING} {BOLD}{'SCANNER':12} {RESET}"
-    BLACKLISTED = f"{ERROR} {BOLD}{'BLACKLISTED':12} {RESET}"
-    CLEAN = f"{SUCCESS} {GRAY}{'NOT LISTED':12} "
+    SCANNER = f"{WARNING} {BOLD}{'SCANNER':10} {RESET}"
+    BLACKLISTED = f"{ERROR} {BOLD}{'BLACKLISTED':10} {RESET}"
+    CLEAN = f"{SUCCESS} {GRAY}{'NOT LISTED':10} "
     DOTSEP = f"{GRAY}{'.' * 30}{RESET}"
     MISSING = f"\n{WARNING} Blacklist file missing -- use the '-u' option to download.\n{YELLOW}  Run: python blacklist_downloader.py -u{RESET}"
-    OUTDATED = f"{WARNING} {CYAN} Blacklist file is older than 1 day - - use the '-u' option to update.\n{RESET}"
+    OUTDATED = f"{WARNING}{YELLOW} Blacklist file is older than 1 day - - use the '-u' option to update.\n{RESET}"
