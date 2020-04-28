@@ -166,10 +166,10 @@ class ProcessBL():
                 matches = set(IPS) & set(bl_ip)
                 for ip in matches:
                     if whois:
-                        print(f"{tc.BLACKLISTED}{ip:12} | {self.geo_locate(ip):25} | {self.whois_ip(ip):10} |{tc.YELLOW} Blacklist: {name}{tc.RESET}")  # nopep8
+                        print(f"\n{tc.BLACKLISTED}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
                         found.append(ip)
                     else:
-                        print(f"{tc.BLACKLISTED}{ip:12} | {self.geo_locate(ip):30}|{tc.YELLOW} Blacklist: {name}{tc.RESET}")  # nopep8
+                        print(f"\n{tc.BLACKLISTED}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
                         found.append(ip)
             except ValueError:
                 print(f"{tc.WARNING} {'INVALID IP':12} {ip}")
@@ -182,10 +182,11 @@ class ProcessBL():
                 matches = set(IPS) & set(sc_ip)
                 for ip in matches:
                     if whois:
-                        print(f"{tc.SCANNER} {ip:15} {self.geo_locate(ip):30} {self.whois_ip(ip)} {tc.YELLOW}Scanner: {name}{tc.RESET}")  # nopep8
+
+                        print(f"\n{tc.SCANNER}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
                         found.append(ip)
                     else:
-                        print(f"{tc.SCANNER} {ip:15} {self.geo_locate(ip):30} {tc.YELLOW}Scanner: {name}{tc.RESET}")  # nopep8
+                        print(f"\n{tc.SCANNER}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
                         found.append(ip)
             except ValueError:
                 print(f"{tc.WARNING} {'INVALID IP':12} {ip}")
@@ -195,9 +196,9 @@ class ProcessBL():
         nomatch = [ip for ip in IPS if ip not in found]
         for ip in nomatch:
             if whois:
-                print(f"{tc.CLEAN} {ip:15} {self.geo_locate(ip):20} {self.whois_ip(ip)}")  # nopep8
+                print(f"\n{tc.CLEAN}[{ip}]:\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
             else:
-                print(f"{tc.CLEAN} {ip:15} {self.geo_locate(ip)}")  # nopep8
+                print(f"\n{tc.CLEAN}[{ip}]:\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
 
     def modified_date(self, _file):
         lastmod = os.stat(_file).st_mtime
