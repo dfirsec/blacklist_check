@@ -37,12 +37,12 @@ optional arguments:
   -r remove             Remove Blacklist feed
   ```
   
-### Download/update Blacklisted IPs from feeds
+### Update Blacklisted IPs from feeds
 
   ```text
   python blacklist_check.py -u
 
- [ Downloading ]
+ [ Updating ]
   ➜  Alien Vault Reputation
   ➜  Bambenek Consulting
   ➜  Bitcoin Nodes
