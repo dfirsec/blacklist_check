@@ -137,16 +137,25 @@ class ProcessBL():
 
                 print(f'{tc.SUCCESS} Added feed: "{feed}": "{url}"')
 
-    def remove_feed(self, feed):
+    # def remove_feed(self, feed):
+    def remove_feed(self):
         with open(FEEDS) as json_file:
             feeds_dict = json.load(json_file)
+            feed_list = feeds_dict['Blacklist Feeds']
+            for n, (k, v) in enumerate(feed_list.items(), start=1):
+                print(f"{tc.CYAN}{n:2}){tc.RESET} {k:25}{v}")
             try:
-                del feeds_dict['Blacklist Feeds'][feed]
+                opt = int(input("\nPlease select your choice by number: "))
+                opt = opt - 1  # enumerate values start at 1, not 0
+                choice = list(feed_list)[opt]
+                del feed_list[choice]
                 with open(FEEDS, 'w') as json_file:
                     json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)  # nopep8
-                print(f'{tc.SUCCESS} Removed feed: "{feed}"')
-            except KeyError:
-                sys.exit(f'{tc.ERROR} Feed "{feed}" does not exist.')
+                print(f'{tc.SUCCESS} Removed feed: "{choice}"')
+            except KeyboardInterrupt:
+                sys.exit()
+            except (IndexError, ValueError, KeyError):
+                sys.exit(f'{tc.ERROR} Your selection does not exist.')
 
     def ip_matches(self, IPS, whois=None):
         try:
@@ -182,7 +191,6 @@ class ProcessBL():
                 matches = set(IPS) & set(sc_ip)
                 for ip in matches:
                     if whois:
-
                         print(f"\n{tc.SCANNER}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
                         found.append(ip)
                     else:
@@ -264,16 +272,23 @@ def main(update, show, query, whois, file, insert, remove):
         pbl.list_count()
 
     if insert:
-        print(f"{tc.PROCESSING} Checking if '{insert[1]}' is a valid url...")  # nopep8
-        try:
-            urllib.request.urlopen(insert[1])
-            pbl.add_feed(insert[0].replace(',', ''),
-                         insert[1].replace(',', ''))
-        except IOError:
-            print(f"{tc.ERROR} '{insert[1]}' appears to be invalid or inaccessible. Try adding it manually.")  # nopep8
+        feed = input("Feed name: ")
+        url = input("Feed url: ")
+        if feed and url:
+            print(f"{tc.PROCESSING} Checking url...")  # nopep8
+            try:
+                urllib.request.urlopen(url, timeout=3)
+            except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
+                print(f"{tc.ERROR} '{url}' appears to be invalid or inaccessible.\n{tc.YELLOW}Option:{tc.RESET} Try adding it manually.")  # nopep8
+            else:
+                pbl.add_feed(feed=feed.replace(',', ''),
+                             url=url.replace(',', ''))
+        else:
+            sys.exit(f"{tc.ERROR} Please include the feed name and url.")
 
     if remove:
-        pbl.remove_feed(remove[0])
+        # pbl.remove_feed(remove[0])
+        pbl.remove_feed()
 
     if query:
         pbl.outdated_file()
@@ -324,10 +339,10 @@ if __name__ == "__main__":
                         help="Perform IP whois lookup")
     parser.add_argument('-f', dest='file', metavar='file',
                         help="Blacklist check a list of IPs from file")
-    parser.add_argument('-i', dest='insert', nargs=2, type=str, metavar='insert',
-                        help='Insert new Blacklist feed.  Use comma-separated key-value pair: "Blacklist Name", "URL"')
-    parser.add_argument('-r', dest='remove', nargs=1, metavar='remove',
-                        type=str, help='Remove Blacklist feed')
+    parser.add_argument('-i', dest='insert', action='store_true',
+                        help='Insert new Blacklist feed.')
+    parser.add_argument('-r', dest='remove', action='store_true',
+                       help='Remove Blacklist feed')
     args = parser.parse_args()
 
     main(update=args.update, show=args.show, query=args.query,
