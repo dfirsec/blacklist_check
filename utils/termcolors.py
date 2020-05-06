@@ -17,7 +17,7 @@ class Termcolor:
     RED = Fore.RED
     RESET = Style.RESET_ALL
     PROCESSING = CYAN + "\u279C " + RESET
-    SUCCESS = GREEN + "\u2714" + RESET
+    SUCCESS = GREEN + "\u2714 " + RESET
     WARNING = YELLOW + "\u03DF" + RESET
     ERROR = RED + "\u2718" + RESET
     QUESTION = YELLOW + "\uFF1F" + RESET
