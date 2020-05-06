@@ -104,7 +104,6 @@ class ProcessBL():
 
     def update_list(self):
         bl_dict = dict()
-
         print(f"{tc.GREEN} [ Updating ]")
         with open(BLACKLIST, 'w') as json_file:
             bl_dict["BLACKLIST"] = {}
@@ -113,10 +112,10 @@ class ProcessBL():
                 bl_dict["BLACKLIST"][name] = self.get_list(url)  # nopep8
 
             # Remove duplicate IP addresses and update
-            for bl_name in bl_dict["BLACKLIST"]:
+            for name in bl_dict["BLACKLIST"]:
                 try:
-                    cleanup = list({ip for ip in bl_dict['BLACKLIST'][bl_name]})  # nopep8
-                    bl_dict['BLACKLIST'].update({bl_name: cleanup})
+                    cleanup = list({ip for ip in bl_dict['BLACKLIST'][name]})  # nopep8
+                    bl_dict['BLACKLIST'].update({name: cleanup})
                 except TypeError:
                     continue
 
@@ -126,19 +125,28 @@ class ProcessBL():
         with open(FEEDS) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict['Blacklist Feeds']
-            try:
-                if feed_list[feed]:
-                    sys.exit(f'{tc.WARNING} Feed "{feed}" already exists.')
-            except KeyError:
-                feed_list.update({feed: url})
+        try:
+            if feed_list[feed]:
+                sys.exit(f'{tc.WARNING} Feed "{feed}" already exists.')
+        except KeyError:
+            feed_list.update({feed: url})
+            with open(FEEDS, 'w') as json_file:
+                json.dump(feeds_dict, json_file,
+                          ensure_ascii=False, indent=4)
+            for n, (k, v) in enumerate(feed_list.items(), start=1):
+                print(f"{tc.CYAN}{n:2}){tc.RESET} {k:25}{v}")
+            print(f'\n{tc.SUCCESS} Added feed: "{feed}": "{url}"')
 
-                with open(FEEDS, 'w') as json_file:
-                    json.dump(feeds_dict, json_file,
-                              ensure_ascii=False, indent=4)
+            print(f"\n{tc.GREEN}[+]{tc.RESET} Updating new feed...")
+            with open(BLACKLIST) as json_file:
+                bl_dict = json.load(json_file)
+                bl_list = bl_dict['BLACKLIST']
 
-                for n, (k, v) in enumerate(feed_list.items(), start=1):
-                    print(f"{tc.CYAN}{n:2}){tc.RESET} {k:25}{v}")
-                print(f'\n{tc.SUCCESS} Added feed: "{feed}": "{url}"')
+            bl_list.update({feed: self.get_list(url)})
+            with open(BLACKLIST, 'w') as json_file:
+                json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)  # nopep8
+            
+            print(f"{tc.GREEN}[+]{tc.RESET} {tc.YELLOW}{len(bl_list[feed]):,}{tc.RESET} IPs added to '{feed}'")  # nopep8
 
     # def remove_feed(self, feed):
     def remove_feed(self):
@@ -147,18 +155,28 @@ class ProcessBL():
             feed_list = feeds_dict['Blacklist Feeds']
             for n, (k, v) in enumerate(feed_list.items(), start=1):
                 print(f"{tc.CYAN}{n:2}){tc.RESET} {k:25}{v}")
-            try:
-                opt = int(input("\nPlease select your choice by number: "))
-                opt = opt - 1  # enumerate values start at 1, not 0
-                choice = list(feed_list)[opt]
-                del feed_list[choice]
-                with open(FEEDS, 'w') as json_file:
-                    json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)  # nopep8
-                print(f'{tc.SUCCESS} Removed feed: "{choice}"')
-            except KeyboardInterrupt:
-                sys.exit()
-            except (IndexError, ValueError, KeyError):
-                sys.exit(f'{tc.ERROR} Your selection does not exist.')
+        try:
+            # remove from feeds
+            opt = int(input("\nPlease select your choice by number: "))
+            opt = opt - 1  # subtract 1 as enumerate starts at 1
+            choice = list(feed_list)[opt]
+            del feed_list[choice]
+            with open(FEEDS, 'w') as json_file:
+                json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)  # nopep8
+        
+            # remove from blacklist
+            with open(BLACKLIST) as json_file:
+                bl_dict = json.load(json_file)
+                del bl_dict['BLACKLIST'][choice]
+            with open(BLACKLIST, 'w') as json_file:
+                json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)  # nopep8
+                
+            print(f'{tc.SUCCESS} Successfully removed feed: "{choice}"')
+
+        except KeyboardInterrupt:
+            sys.exit()
+        except (IndexError, ValueError, KeyError):
+            sys.exit(f'{tc.ERROR} Your selection does not exist.')
 
     def ip_matches(self, IPS, whois=None):
         try:
@@ -178,10 +196,14 @@ class ProcessBL():
                 matches = set(IPS) & set(bl_ip)
                 for ip in matches:
                     if whois:
-                        print(f"\n{tc.BLACKLISTED}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
+                        print(f"\n{tc.BLACKLISTED}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\
+                            \n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\
+                                \n{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")
                         found.append(ip)
                     else:
-                        print(f"\n{tc.BLACKLISTED}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
+                        print(f"\n{tc.BLACKLISTED}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\
+                            \n{('-' * 35)}\n{tc.BOLD}{'Location:':10} \
+                                {tc.RESET}{self.geo_locate(ip)}\n")
                         found.append(ip)
             except ValueError:
                 print(f"{tc.WARNING} {'INVALID IP':12} {ip}")
@@ -194,10 +216,14 @@ class ProcessBL():
                 matches = set(IPS) & set(sc_ip)
                 for ip in matches:
                     if whois:
-                        print(f"\n{tc.SCANNER}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
+                        print(f"\n{tc.SCANNER}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\
+                            \n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\
+                                \n{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")
                         found.append(ip)
                     else:
-                        print(f"\n{tc.SCANNER}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
+                        print(f"\n{tc.SCANNER}[{ip}]: {tc.YELLOW}{name}{tc.RESET}\
+                            \n{('-' * 35)}\n{tc.BOLD}{'Location:':10} \
+                                {tc.RESET}{self.geo_locate(ip)}\n")
                         found.append(ip)
             except ValueError:
                 print(f"{tc.WARNING} {'INVALID IP':12} {ip}")
@@ -207,9 +233,12 @@ class ProcessBL():
         nomatch = [ip for ip in IPS if ip not in found]
         for ip in nomatch:
             if whois:
-                print(f"\n{tc.CLEAN}[{ip}]:\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
+                print(f"\n{tc.CLEAN}[{ip}]:\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} \
+                    {tc.RESET}{self.geo_locate(ip)}\n{tc.BOLD}{'Whois:':10} \
+                        {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
             else:
-                print(f"\n{tc.CLEAN}[{ip}]:\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
+                print(f"\n{tc.CLEAN}[{ip}]:\n{('-' * 35)}\n{tc.BOLD}{'Location:':10} \
+                    {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
 
     def modified_date(self, _file):
         lastmod = os.stat(_file).st_mtime
@@ -275,14 +304,18 @@ def main(update, show, query, whois, file, insert, remove):
         pbl.list_count()
 
     if insert:
-        feed = input("Feed name: ")
-        url = input("Feed url: ")
+        try:
+            feed = input("Feed name: ")
+            url = input("Feed url: ")
+        except KeyboardInterrupt:
+            sys.exit()
         if feed and url:
             print(f"{tc.PROCESSING} Checking url...")  # nopep8
             try:
                 urllib.request.urlopen(url, timeout=3)
             except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
-                print(f"{tc.ERROR} '{url}' appears to be invalid or inaccessible.\n{tc.YELLOW}Option:{tc.RESET} Try adding it manually.")  # nopep8
+                print(f"{tc.ERROR} '{url}' appears to be invalid or inaccessible.\
+                    \n{tc.YELLOW}Option:{tc.RESET} Try adding it manually.")
             else:
                 pbl.add_feed(feed=feed.replace(',', ''),
                              url=url.replace(',', ''))
@@ -345,7 +378,7 @@ if __name__ == "__main__":
     parser.add_argument('-i', dest='insert', action='store_true',
                         help='Insert new Blacklist feed.')
     parser.add_argument('-r', dest='remove', action='store_true',
-                       help='Remove Blacklist feed')
+                        help='Remove Blacklist feed')
     args = parser.parse_args()
 
     main(update=args.update, show=args.show, query=args.query,
