@@ -125,17 +125,20 @@ class ProcessBL():
     def add_feed(self, feed, url):
         with open(FEEDS) as json_file:
             feeds_dict = json.load(json_file)
+            feed_list = feeds_dict['Blacklist Feeds']
             try:
-                if feeds_dict['Blacklist Feeds'][feed]:
+                if feed_list[feed]:
                     sys.exit(f'{tc.WARNING} Feed "{feed}" already exists.')
             except KeyError:
-                feeds_dict['Blacklist Feeds'].update({feed: url})
+                feed_list.update({feed: url})
 
                 with open(FEEDS, 'w') as json_file:
                     json.dump(feeds_dict, json_file,
                               ensure_ascii=False, indent=4)
 
-                print(f'{tc.SUCCESS} Added feed: "{feed}": "{url}"')
+                for n, (k, v) in enumerate(feed_list.items(), start=1):
+                    print(f"{tc.CYAN}{n:2}){tc.RESET} {k:25}{v}")
+                print(f'\n{tc.SUCCESS} Added feed: "{feed}": "{url}"')
 
     # def remove_feed(self, feed):
     def remove_feed(self):
