@@ -113,25 +113,61 @@ Windows SpyBlocker       : 358
 ```
 
 ### Insert new Blacklist feed
-
 ```text
-python blacklist_check.py" -i "Windows SpyBlocker", https://...WindowsSpyBlocker...
+python blacklist_check.py" -i 
+Feed name: Windows SpyBlocker
+Feed url: https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/firewall/extra.txt
+[ Checking URL ]
+✔  URL is good
+✔  Added feed: "Windows SpyBlocker": "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/firewall/extra.txt"
 
-✔ Added feed: "Windows SpyBlocker": "https://...WindowsSpyBlocker..."
+[ Updating new feed ]
+✔  371 IPs added to 'Windows SpyBlocker'
 ```
 
 ### Remove Blacklist feed
+Removes entry from both the feeds and blacklist
+```
+python blacklist_check.py" -r
+ 1) Alien Vault Reputation   http://reputation.alienvault.com/reputation.data
+ 2) Bambenek Consulting      https://osint.bambenekconsulting.com/feeds/c2-masterlist.txt
+ 3) Bitcoin Nodes            https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/bitcoin_nodes.ipset
+ 4) Blocklist DE             http://www.blocklist.de/lists/all.txt
+ 5) Bot Scout IPs            https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/botscout.ipset
+ 6) Brute Force Blocker      https://panwdbl.appspot.com/lists/bruteforceblocker.txt
+ 7) CI Army Badguys          http://www.ciarmy.com/list/ci-badguys.txt
+ 8) Coin Blacklist Hosts     https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/coinbl_hosts.ipset
+ 9) CyberCrime               https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/cybercrime.ipset
+10) Danger Rulez             http://danger.rulez.sk/projects/bruteforceblocker/blist.php
+11) Darklist DE              https://www.darklist.de/raw.php
+12) ET Compromised           https://rules.emergingthreats.net/blockrules/compromised-ips.txt
+13) ET Tor Rules             https://rules.emergingthreats.net/blockrules/emerging-tor.rules
+14) GreenSnow                https://blocklist.greensnow.co/greensnow.txt
+15) IP Spamlist              http://www.ipspamlist.com/public_feeds.csv
+16) MalC0de Blacklist        http://malc0de.com/bl/IP_Blacklist.txt
+17) Malware Army             https://malware.army/api/honey_iplist
+18) Malware Domains          http://www.malwaredomainlist.com/hostslist/ip.txt
+19) Mirai Security           https://mirai.security.gives/data/ip_list.txt
+20) MyIP Blacklist           https://www.myip.ms/files/blacklist/csf/latest_blacklist.txt
+21) OpenPhish                https://openphish.com/feed.txt
+22) PhishTank                http://data.phishtank.com/data/online-valid.csv
+23) SSL Abuse IP List        https://panwdbl.appspot.com/lists/sslabuseiplist.txt
+24) SpamHaus Drop            https://panwdbl.appspot.com/lists/shdrop.txt
+25) Stop Forum Spam          https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/stopforumspam.ipset
+26) Talos Intel              https://talosintelligence.com/documents/ip-blacklist
+27) Threat Crowd             https://www.threatcrowd.org/feeds/ips.txt
+28) Threatweb Botnet IPs     https://www.threatweb.com/access/Botnet-IPs-High_Confidence_BL.txt
+29) Threatweb Watchlist      https://www.threatweb.com/access/SIEM/OPTIV_HIGH_CONFIDENCE_SIEM_IP_WATCHLIST.txt
+30) URL Haus                 https://urlhaus.abuse.ch/downloads/csv_recent/
+31) Windows SpyBlocker       https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/firewall/extra.txt
 
-```text
-python blacklist_check.py" -r "Windows SpyBlocker"
-
-✔ Removed feed: "Windows SpyBlocker"
+Please select your choice by number: 31
+✔ Successfully removed feed: "Windows SpyBlocker"
 ```
 
 ### Check if IP is blacklisted
 
 #### Single
-
  ```text
 python blacklist_check.py" -q 104.152.52.31
   
