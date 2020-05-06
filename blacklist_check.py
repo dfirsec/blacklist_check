@@ -133,11 +133,9 @@ class ProcessBL():
             with open(FEEDS, 'w') as json_file:
                 json.dump(feeds_dict, json_file,
                           ensure_ascii=False, indent=4)
-            for n, (k, v) in enumerate(feed_list.items(), start=1):
-                print(f"{tc.CYAN}{n:2}){tc.RESET} {k:25}{v}")
-            print(f'\n{tc.SUCCESS} Added feed: "{feed}": "{url}"')
-
-            print(f"\n{tc.GREEN}[+]{tc.RESET} Updating new feed...")
+            print(f'{tc.SUCCESS} Added feed: "{feed}": "{url}"')
+            
+            print(f"\n{tc.CYAN}[ Updating new feed ]{tc.RESET}")
             with open(BLACKLIST) as json_file:
                 bl_dict = json.load(json_file)
                 bl_list = bl_dict['BLACKLIST']
@@ -146,7 +144,10 @@ class ProcessBL():
             with open(BLACKLIST, 'w') as json_file:
                 json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)  # nopep8
             
-            print(f"{tc.GREEN}[+]{tc.RESET} {tc.YELLOW}{len(bl_list[feed]):,}{tc.RESET} IPs added to '{feed}'")  # nopep8
+            print(f"{tc.SUCCESS} {tc.YELLOW}{len(bl_list[feed]):,}{tc.RESET} IPs added to '{feed}'")  # nopep8
+            
+            # for n, (k, v) in enumerate(feed_list.items(), start=1):
+            #     print(f"{tc.CYAN}{n:2}){tc.RESET} {k:25}{v}")
 
     # def remove_feed(self, feed):
     def remove_feed(self):
@@ -310,9 +311,10 @@ def main(update, show, query, whois, file, insert, remove):
         except KeyboardInterrupt:
             sys.exit()
         if feed and url:
-            print(f"{tc.PROCESSING} Checking url...")  # nopep8
+            print(f"\n{tc.CYAN}[ Checking URL ]{tc.RESET}")
             try:
                 urllib.request.urlopen(url, timeout=3)
+                print(f"{tc.SUCCESS} URL is good")
             except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
                 print(f"{tc.ERROR} '{url}' appears to be invalid or inaccessible.\
                     \n{tc.YELLOW}Option:{tc.RESET} Try adding it manually.")
