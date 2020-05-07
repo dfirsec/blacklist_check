@@ -383,7 +383,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="IP Blacklist Check")
     parser.add_argument('-u', dest='update', action='store_true',
-                        help="Update Blacklisted Feeds")
+                        help="Update Blacklist Feeds")
     parser.add_argument('-s', dest='show', action='store_true',
                         help="List Blacklist Feeds")
     parser.add_argument('-q', dest='query', nargs='+', metavar='query',
