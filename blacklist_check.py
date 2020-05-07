@@ -239,7 +239,8 @@ class ProcessBL():
             for ip in found:
                 print(f"{tc.BOLD}{'IP:':11}{ip}{tc.RESET}")
                 print(f"{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}")  # nopep8
-                print(f"{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
+                if whois:
+                    print(f"{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
 
         # not blacklisted
         nomatch = [ip for ip in IPS if ip not in found]
