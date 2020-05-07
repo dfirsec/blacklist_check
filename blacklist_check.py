@@ -393,7 +393,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', dest='file', metavar='file',
                         help="Query a list of IPs from file")
     parser.add_argument('-i', dest='insert', action='store_true',
-                        help='Insert new Blacklist feed.')
+                        help='Insert Blacklist feed')
     parser.add_argument('-r', dest='remove', action='store_true',
                         help='Remove Blacklist feed')
     args = parser.parse_args()
