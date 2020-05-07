@@ -383,15 +383,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="IP Blacklist Check")
     parser.add_argument('-u', dest='update', action='store_true',
-                        help="Update set of Blacklisted IPs")
+                        help="Update Blacklisted Feeds")
     parser.add_argument('-s', dest='show', action='store_true',
-                        help="Show/Sort Blacklist Feeds by Name or Count")
+                        help="List Blacklist Feeds")
     parser.add_argument('-q', dest='query', nargs='+', metavar='query',
-                        help="Query a single or list of IPs against Blacklist")
+                        help="Query a single or multiple IPs")
     parser.add_argument('-w', dest='whois', action='store_true',
                         help="Perform IP whois lookup")
     parser.add_argument('-f', dest='file', metavar='file',
-                        help="Blacklist check a list of IPs from file")
+                        help="Query a list of IPs from file")
     parser.add_argument('-i', dest='insert', action='store_true',
                         help='Insert new Blacklist feed.')
     parser.add_argument('-r', dest='remove', action='store_true',
