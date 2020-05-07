@@ -179,7 +179,14 @@ Please select your choice by number: 31
  ```text
 python blacklist_check.py" -q 104.152.52.31
   
-✘ BLACKLISTED  104.152.52.31   United States (US)             Blacklist: Alien Vault Reputation
+✘ BLACKLISTED by: Alien Vault Reputation
+
+✘ BLACKLISTED by: CI Army Badguys
+
+------------ IP Info ------------
+IP:        104.152.52.31
+Location:  United States (US)
+Whois:     Rethem Hosting LLC
 ```
 
 #### Multiple inline
@@ -187,9 +194,24 @@ python blacklist_check.py" -q 104.152.52.31
 ```text
 python blacklist_check.py -q 5.255.250.96, 78.46.85.236, 46.229.168.146
   
-✘ BLACKLISTED  46.229.168.146  Ashburn, Virginia (US)         Blacklist: MyIP Blacklist
-✔ NOT LISTED   5.255.250.96    Moscow, Russia (RU)
-✔ NOT LISTED   78.46.85.236    Germany (DE)
+✘ BLACKLISTED by: MyIP Blacklist
+
+------------ IP Info ------------
+IP:        46.229.168.146
+Location:  Ashburn, Virginia (US)
+Whois:     Advanced Hosters B.V.
+
+
+✔  NOT LISTED 
+-----------------------------------
+IP:        5.255.250.96
+Location:  Moscow, Russia (RU)
+
+
+✔  NOT LISTED 
+-----------------------------------
+IP:        78.46.85.236
+Location:  Germany (DE)
 ```
 
 #### Multiple from file
@@ -197,9 +219,24 @@ python blacklist_check.py -q 5.255.250.96, 78.46.85.236, 46.229.168.146
 ```text
 python blacklist_check.py -f ip_list.txt
   
-✘ BLACKLISTED  46.229.168.146  Ashburn, Virginia (US)         Blacklist: MyIP Blacklist
-✔ NOT LISTED   5.255.250.96    Moscow, Russia (RU)
-✔ NOT LISTED   78.46.85.236    Germany (DE)
+✘ BLACKLISTED by: MyIP Blacklist
+
+------------ IP Info ------------
+IP:        46.229.168.146
+Location:  Ashburn, Virginia (US)
+Whois:     Advanced Hosters B.V.
+
+
+✔  NOT LISTED 
+-----------------------------------
+IP:        5.255.250.96
+Location:  Moscow, Russia (RU)
+
+
+✔  NOT LISTED 
+-----------------------------------
+IP:        78.46.85.236
+Location:  Germany (DE)
 ```
 
 #### IP Whois Lookup
@@ -210,8 +247,31 @@ python blacklist_check.py -q 75.62.69.12, 12.16.5.23, 87.56.25.4, 18.23.36.2 -w
 ..............................
 [ Performing IP whois lookup ]
 
-✔ NOT LISTED    75.62.69.12     Allen, Texas (US)    AT&T Corp.
-✔ NOT LISTED    12.16.5.23      United States (US)   AT&T Services, Inc.
-✔ NOT LISTED    87.56.25.4      Denmark (DK)         TDC BB-ADSL users
-✔ NOT LISTED    18.23.36.2      United States (US)   Massachusetts Institute of Technology
+
+✔  NOT LISTED 
+-----------------------------------
+IP:        75.62.69.12
+Location:  Allen, Texas (US)
+Whois:     AT&T Corp.
+
+
+✔  NOT LISTED 
+-----------------------------------
+IP:        12.16.5.23
+Location:  United States (US)
+Whois:     AT&T Services, Inc.
+
+
+✔  NOT LISTED 
+-----------------------------------
+IP:        87.56.25.4
+Location:  Denmark (DK)
+Whois:     TDC BB-ADSL users
+
+
+✔  NOT LISTED 
+-----------------------------------
+IP:        18.23.36.2
+Location:  United States (US)
+Whois:     Massachusetts Institute of Technology
 ```
