@@ -151,9 +151,6 @@ class ProcessBL():
 
             print(f"{tc.SUCCESS} {tc.YELLOW}{len(bl_list[feed]):,}{tc.RESET} IPs added to '{feed}'")  # nopep8
 
-            # for n, (k, v) in enumerate(feed_list.items(), start=1):
-            #     print(f"{tc.CYAN}{n:2}){tc.RESET} {k:25}{v}")
-
     # def remove_feed(self, feed):
     def remove_feed(self):
         with open(FEEDS) as json_file:
