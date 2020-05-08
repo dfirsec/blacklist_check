@@ -79,14 +79,13 @@ class ProcessBL():
             data = json.load(json_file)
             return [[name, url] for name, url in data['Blacklist Feeds'].items()]
 
-    ### For future use ###
     def sort_list(self, data):
         sort_name = sorted((name, ip_cnt) for (name, ip_cnt) in data["BLACKLIST"].items())  # nopep8
-        for i in sort_name:
+        for n, i in enumerate(sort_name, start=1):
             try:
-                print(f"{i[0]:23}: {len(i[1]):<6,}")
+                print(f"{tc.CYAN}{n:2}){tc.RESET} {i[0]:23}: {len(i[1]):<6,}")
             except TypeError:
-                print(f"{i[0]:23}: {tc.GRAY}[DOWNLOAD ERROR]{tc.RESET}")
+                print(f"{tc.CYAN}{n:2}){tc.RESET} {i[0]:23}: {tc.GRAY}[DOWNLOAD ERROR]{tc.RESET}")
                 continue
 
     def list_count(self, opt=None):
@@ -94,7 +93,7 @@ class ProcessBL():
             with open(BLACKLIST) as json_file:
                 data = json.load(json_file)
                 self.clr_scrn()
-                print(f"\n{tc.BOLD}{'LIST':25} COUNT{tc.RESET}")
+                print(f"\n{tc.BOLD}{'BLACKLIST':28}IP COUNT{tc.RESET}")
                 print("-" * 35)
                 self.sort_list(data)
 
