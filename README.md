@@ -36,7 +36,9 @@ optional arguments:
   -i insert insert      Insert new Blacklist feed. Use comma-separated key-value pair: "Blacklist Name", "URL"
   -r remove             Remove Blacklist feed
   ```
-  
+#### Example Run
+  ![alt text](blacklist_check.gif)
+
 ### Update Blacklisted IPs from feeds
 
   ```text
