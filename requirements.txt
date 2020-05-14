@@ -1,4 +1,7 @@
 argparse
 colorama
+coloredlogs
+dnspython
 ipwhois
 requests
+verboselogs
