@@ -6,6 +6,7 @@ __description__ = "Check IP addresses against blacklists from various sources."
 
 import argparse
 import json
+import logging
 import os
 import platform
 import random
@@ -13,11 +14,15 @@ import re
 import sys
 import time
 import urllib
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, ip_address
 from pathlib import Path
 
+import coloredlogs
+import dns.resolver
 import requests
+import verboselogs
 from ipwhois import IPWhois, exceptions
 
 from utils.termcolors import Termcolor as tc
@@ -29,6 +34,17 @@ BASE_DIR = Path(__file__).resolve().parent
 BLACKLIST = BASE_DIR.joinpath('utils/blacklist.json')
 SCANNERS = BASE_DIR.joinpath('utils/scanners.json')
 FEEDS = BASE_DIR.joinpath('utils/feeds.json')
+
+logger = verboselogs.VerboseLogger(__name__)
+logger.setLevel(logging.INFO)
+coloredlogs.install(level='DEBUG', logger=logger, fmt='%(message)s',
+                    level_styles={
+                        'notice': {'color': 'black', 'bright': True},
+                        'warning': {'color': 'yellow'},
+                        'success': {'color': 'white', 'bold': True},
+                        'error': {'color': 'red'},
+                        'critical': {'background': 'red'}
+                    })
 
 
 class ProcessBL():
@@ -61,10 +77,10 @@ class ProcessBL():
         # Exclude IP if 1st and last octet are zero
         ipv4 = re.compile(r"(?![0])\d{1,}\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
         try:
-            r = requests.get(url, timeout=5, headers=self.headers())
-            r.encoding = 'utf-8'
-            if r.status_code == 200:
-                return [x.group() for x in re.finditer(ipv4, r.text)]
+            resp = requests.get(url, timeout=5, headers=self.headers())
+            resp.encoding = 'utf-8'
+            if resp.status_code == 200:
+                return [x.group() for x in re.finditer(ipv4, resp.text)]
         except requests.exceptions.Timeout:
             print(f"    {tc.DOWNLOAD_ERR} {tc.GRAY}{url}{tc.RESET}")  # nopep8
         except requests.exceptions.HTTPError as err:
@@ -85,10 +101,11 @@ class ProcessBL():
             try:
                 print(f"{tc.CYAN}{n:2}){tc.RESET} {i[0]:23}: {len(i[1]):<6,}")
             except TypeError:
-                print(f"{tc.CYAN}{n:2}){tc.RESET} {i[0]:23}: {tc.GRAY}[DOWNLOAD ERROR]{tc.RESET}")
+                print(
+                    f"{tc.CYAN}{n:2}){tc.RESET} {i[0]:23}: {tc.GRAY}[DOWNLOAD ERROR]{tc.RESET}")
                 continue
 
-    def list_count(self, opt=None):
+    def list_count(self):
         try:
             with open(BLACKLIST) as json_file:
                 data = json.load(json_file)
@@ -103,7 +120,7 @@ class ProcessBL():
 
     def update_list(self):
         bl_dict = dict()
-        print(f"{tc.GREEN} [ Updating ]")
+        print(f"{tc.GREEN} [ Updating ]{tc.RESET}")
         with open(BLACKLIST, 'w') as json_file:
             bl_dict["BLACKLIST"] = {}
             for name, url in self.read_list():
@@ -159,7 +176,7 @@ class ProcessBL():
                 print(f"{tc.CYAN}{n:2}){tc.RESET} {k:25}{v}")
         try:
             # remove from feeds
-            opt = int(input("\nPlease select your choice by number, or Ctrl-C to cancel: "))  #nopep8
+            opt = int(input("\nPlease select your choice by number, or Ctrl-C to cancel: "))  # nopep8
             opt = opt - 1  # subtract 1 as enumerate starts at 1
             choice = list(feed_list)[opt]
             del feed_list[choice]
@@ -231,7 +248,7 @@ class ProcessBL():
                 print(f"{tc.WARNING} {'INVALID IP':12} {ip}")
             except TypeError:
                 continue
-        
+
         # report matches
         if found:
             print(f"\n{('-' * 12)} IP Info {('-' * 12)}")
@@ -264,9 +281,9 @@ class ProcessBL():
     def geo_locate(self, ip):
         try:
             url = f'https://freegeoip.live/json/{ip}'
-            r = requests.get(url)
-            if r.status_code == 200:
-                data = json.loads(r.content.decode('utf-8'))
+            resp = requests.get(url)
+            if resp.status_code == 200:
+                data = json.loads(resp.content.decode('utf-8'))
                 city = data['city']
                 state = data['region_name']
                 country = data['country_name']
@@ -278,7 +295,7 @@ class ProcessBL():
                 else:
                     return f"{country} ({iso_code})"
             else:
-                r.raise_for_status()
+                resp.raise_for_status()
         except Exception as err:
             print(f"[error] {err}\n")
 
@@ -305,9 +322,59 @@ class ProcessBL():
             sys.exit(tc.MISSING)
 
 
+class DNSBL(object):
+    def __init__(self, host):
+        self.host = host
+
+    def dnsbl_query(self, blacklist):
+        host = str(''.join(self.host))
+
+        # Return Codes
+        codes = ['127.0.0.2', '127.0.0.3', '127.0.0.4', '127.0.0.5',
+                 '127.0.0.6', '127.0.0.7', '127.0.0.9', '127.0.1.4',
+                 '127.0.1.5', '127.0.1.6', '127.0.0.10', '127.0.0.11',
+                 '127.0.0.39', '127.0.1.103', '127.0.1.104', '127.0.1.105', 
+                 '127.0.1.106']
+
+        try:
+            resolver = dns.resolver.Resolver()
+            resolver.timeout = 3
+            resolver.lifetime = 3
+            qry = ''
+            try:
+                qry = ip_address(host).reverse_pointer.strip('.in-addr.arpa') + "." + blacklist  # nopep8
+            except Exception:
+                qry = host + "." + blacklist
+            answer = resolver.query(qry, "A")
+            if any(str(answer[0]) in s for s in codes):
+                logger.success(f"{tc.RED}\u2716{tc.RESET}  Blacklisted > {blacklist}")
+        except (dns.resolver.NXDOMAIN,
+                dns.resolver.Timeout,
+                dns.resolver.NoNameservers,
+                dns.resolver.NoAnswer):
+            pass
+
+    def dnsbl_mapper(self):
+        with open(FEEDS) as json_file:
+            data = json.load(json_file)
+        dnsbl = [url for url in data['DNS Blacklists']['DNSBL']]
+
+        with ThreadPoolExecutor(max_workers=50) as executor:
+            dnsbl_map = {
+                executor.submit(self.dnsbl_query, url): url for url in dnsbl
+            }
+            for future in as_completed(dnsbl_map):
+                try:
+                    future.result()
+                except Exception as exc:
+                    print(f"Exception generated: {exc}")  # nopep8
+
+
 def main(update, show, query, whois, file, insert, remove):
     pbl = ProcessBL()
+    dbl = DNSBL(host=query)
 
+    # check arguments
     if len(sys.argv[1:]) == 0:
         parser.print_help()
         parser.exit()
@@ -321,51 +388,61 @@ def main(update, show, query, whois, file, insert, remove):
         pbl.list_count()
 
     if insert:
-        try:
-            feed = input("Feed name: ")
-            url = input("Feed url: ")
-        except KeyboardInterrupt:
-            sys.exit()
-        if feed and url:
-            print(f"\n{tc.CYAN}[ Checking URL ]{tc.RESET}")
+        while True:
             try:
-                urllib.request.urlopen(url, timeout=3)
-                print(f"{tc.SUCCESS} URL is good")
-            except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
-                print(f"{tc.ERROR} '{url}' appears to be invalid or inaccessible.")
+                feed = input("Feed name: ")
+                url = input("Feed url: ")
+            except KeyboardInterrupt:
+                sys.exit()
+            if feed and url:
+                print(f"\n{tc.CYAN}[ Checking URL ]{tc.RESET}")
+                try:
+                    urllib.request.urlopen(url, timeout=3)
+                    print(f"{tc.SUCCESS} URL is good")
+                    confirm = input(f'Insert the following feed (y/n)? \n{feed}: {url} ')  # nopep8
+                    if confirm.lower() == 'y':
+                        pbl.add_feed(feed=feed.replace(',', ''),
+                                    url=url.replace(',', ''))
+                    else:
+                        sys.exit(f"Request canceled")
+                    break
+
+                except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
+                    print(f"{tc.ERROR} URL '{url}' appears to be invalid or inaccessible.")  # nopep8
             else:
-                pbl.add_feed(feed=feed.replace(',', ''),
-                             url=url.replace(',', ''))
-        else:
-            sys.exit(f"{tc.ERROR} Please include the feed name and url.")
+                sys.exit(f"{tc.ERROR} Please include the feed name and url.")
+                break
 
     if remove:
-        # pbl.remove_feed(remove[0])
         pbl.remove_feed()
 
     if query:
         pbl.outdated_file()
-        IPS = []
+        IPs = []
         for arg in query:
             try:
                 IPv4Address(arg.replace(',', ''))
-                IPS.append(arg.replace(',', ''))
+                IPs.append(arg.replace(',', ''))
             except ValueError:
                 print(f"{tc.WARNING} {'INVALID IP':12} {arg}")
         if whois:
             print(f"{tc.DOTSEP}\n{tc.GREEN}[ Performing IP whois lookup ]{tc.RESET}\n")  # nopep8
-            pbl.ip_matches(IPS, whois=whois)
+            pbl.ip_matches(IPs, whois=whois)
         else:
-            pbl.ip_matches(IPS)
+            pbl.ip_matches(IPs)
+
+        if len(query) == 1:
+            print(f"{tc.DOTSEP}\n{tc.GREEN}[ Performing DNS Blacklist check ]{tc.RESET}")  # nopep8
+            dbl.dnsbl_mapper()
 
     if file:
         pbl.outdated_file()
         try:
             with open(file) as infile:
-                IPS = [line.strip() for line in infile.readlines()]
+                IPs = [line.strip() for line in infile.readlines()]
         except FileNotFoundError:
             sys.exit(f"{tc.WARNING} No such file: {file}")
-        pbl.ip_matches(IPS)
+        pbl.ip_matches(IPs)
 
 
 if __name__ == "__main__":
@@ -382,19 +459,19 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="IP Blacklist Check")
     parser.add_argument('-u', dest='update', action='store_true',
-                        help="Update Blacklist Feeds")
+                        help="update blacklist feeds")
     parser.add_argument('-s', dest='show', action='store_true',
-                        help="List Blacklist Feeds")
+                        help="list blacklist feeds")
     parser.add_argument('-q', dest='query', nargs='+', metavar='query',
-                        help="Query a single or multiple IPs")
+                        help="query a single or multiple ip addrs")
     parser.add_argument('-w', dest='whois', action='store_true',
-                        help="Perform IP whois lookup")
+                        help="perform ip whois lookup")
     parser.add_argument('-f', dest='file', metavar='file',
-                        help="Query a list of IPs from file")
+                        help="query a list of ip addrs from file")
     parser.add_argument('-i', dest='insert', action='store_true',
-                        help='Insert Blacklist feed')
+                        help='insert a new blacklist feed')
     parser.add_argument('-r', dest='remove', action='store_true',
-                        help='Remove Blacklist feed')
+                        help='remove an existing blacklist feed')
     args = parser.parse_args()
 
     main(update=args.update, show=args.show, query=args.query,
