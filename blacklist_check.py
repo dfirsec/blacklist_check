@@ -325,16 +325,51 @@ class ProcessBL():
 class DNSBL(object):
     def __init__(self, host):
         self.host = host
+        self.COUNT = 0
+
+    def update_dnsbl(self):
+        url = 'http://multirbl.valli.org/list/'
+        page = requests.get(url).text
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(page, 'html.parser')
+        table = soup.find("table")
+        table_rows = table.find_all('tr')
+
+        alive = []
+        for tr in table_rows:
+            td = tr.find_all('td')
+            row = [i.text for i in td]
+            if '(hidden)' not in row:
+                alive.append(row[2])
+
+        with open(FEEDS) as json_file:
+            feeds_dict = json.load(json_file)
+            feed_list = feeds_dict['DNS Blacklists']['DNSBL']
+
+        diff = [x for x in alive if x not in feed_list]
+        if len(diff) > 1:
+            print(f"{tc.GREEN} [ Updating RBLs ]{tc.RESET}")
+            for item in diff:
+                if item not in feed_list:
+                    logger.success(f"[+] Adding {item}")
+                    feed_list.append(item)
+
+            with open(FEEDS, 'w') as json_file:
+                json.dump(feeds_dict, json_file,
+                          ensure_ascii=False,
+                          indent=4)
+        else:
+            return False
 
     def dnsbl_query(self, blacklist):
         host = str(''.join(self.host))
 
         # Return Codes
-        codes = ['127.0.0.2', '127.0.0.3', '127.0.0.4', '127.0.0.5',
-                 '127.0.0.6', '127.0.0.7', '127.0.0.9', '127.0.1.4',
-                 '127.0.1.5', '127.0.1.6', '127.0.0.10', '127.0.0.11',
-                 '127.0.0.39', '127.0.1.103', '127.0.1.104', '127.0.1.105', 
-                 '127.0.1.106']
+        codes = ['0.0.0.1', '127.0.0.1', '127.0.0.2', '127.0.0.3',
+                 '127.0.0.4', '127.0.0.5', '127.0.0.6', '127.0.0.7',
+                 '127.0.0.9', '127.0.1.4', '127.0.1.5', '127.0.1.6',
+                 '127.0.0.10', '127.0.0.11', '127.0.0.39', '127.0.1.103',
+                 '127.0.1.104', '127.0.1.105', '127.0.1.106']
 
         try:
             resolver = dns.resolver.Resolver()
@@ -347,12 +382,20 @@ class DNSBL(object):
                 qry = host + "." + blacklist
             answer = resolver.query(qry, "A")
             if any(str(answer[0]) in s for s in codes):
-                logger.success(f"{tc.RED}\u2716{tc.RESET}  Blacklisted > {blacklist}")
+                logger.success(f"{tc.RED}\u2716{tc.RESET}  Blacklisted > {blacklist}")  # nopep8
+                self.COUNT += 1
         except (dns.resolver.NXDOMAIN,
                 dns.resolver.Timeout,
                 dns.resolver.NoNameservers,
                 dns.resolver.NoAnswer):
             pass
+        # # Option: displays not listed entries
+        # except dns.resolver.NXDOMAIN:
+        #     logger.notice(f'Not listed: {blacklist}')
+        # except (dns.resolver.Timeout,
+        #         dns.resolver.NoNameservers,
+        #         dns.resolver.NoAnswer):
+        #     pass
 
     def dnsbl_mapper(self):
         with open(FEEDS) as json_file:
@@ -368,6 +411,9 @@ class DNSBL(object):
                     future.result()
                 except Exception as exc:
                     print(f"Exception generated: {exc}")  # nopep8
+            if self.COUNT:
+                host = str(''.join(self.host))
+                logger.warning(f"\n[*] {host} is listed in {self.COUNT} block lists")  # nopep8
 
 
 def main(update, show, query, whois, file, insert, remove):
@@ -384,8 +430,13 @@ def main(update, show, query, whois, file, insert, remove):
         pbl.outdated_file()
 
     if update:
-        pbl.update_list()
-        pbl.list_count()
+        if pbl.outdated_file():
+            pbl.update_list()
+            pbl.list_count()
+        elif dbl.update_dnsbl():
+            dbl.update_dnsbl()
+        else:
+            print("\nAll feeds are current.")
 
     if insert:
         while True:
@@ -402,7 +453,7 @@ def main(update, show, query, whois, file, insert, remove):
                     confirm = input(f'Insert the following feed (y/n)? \n{feed}: {url} ')  # nopep8
                     if confirm.lower() == 'y':
                         pbl.add_feed(feed=feed.replace(',', ''),
-                                    url=url.replace(',', ''))
+                                     url=url.replace(',', ''))
                     else:
                         sys.exit(f"Request canceled")
                     break
@@ -432,7 +483,7 @@ def main(update, show, query, whois, file, insert, remove):
             pbl.ip_matches(IPs)
 
         if len(query) == 1:
-            print(f"{tc.DOTSEP}\n{tc.GREEN}[ Performing DNS Blacklist check ]{tc.RESET}")  # nopep8
+            print(f"{tc.DOTSEP}\n{tc.GREEN}[ Reputation Block List Check ]{tc.RESET}")  # nopep8
             dbl.dnsbl_mapper()
 
     if file:
