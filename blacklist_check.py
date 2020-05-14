@@ -219,11 +219,11 @@ class ProcessBL():
                 matches = set(IPS) & set(bl_ip)
                 for ip in matches:
                     if whois:
-                        print(f"\n{tc.BLACKLISTED}by: {tc.YELLOW}{name}{tc.RESET}")  # nopep8
+                        print(f"\n{tc.BLACKLISTED} {tc.YELLOW}{name}{tc.RESET}")  # nopep8
                         if ip not in found:
                             found.append(ip)
                     else:
-                        print(f"\n{tc.BLACKLISTED}by: {tc.YELLOW}{name}{tc.RESET}")  # nopep8
+                        print(f"\n{tc.BLACKLISTED} {tc.YELLOW}{name}{tc.RESET}")  # nopep8
                         if ip not in found:
                             found.append(ip)
             except ValueError:
