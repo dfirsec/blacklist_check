@@ -181,12 +181,27 @@ python blacklist_check.py" -q 104.152.52.31
   
 ✘ BLACKLISTED by: Alien Vault Reputation
 
-✘ BLACKLISTED by: CI Army Badguys
+✘ BLACKLISTED by: Blocklist DE
+
+✘ BLACKLISTED by: GreenSnow
 
 ------------ IP Info ------------
 IP:        104.152.52.31
 Location:  United States (US)
-Whois:     Rethem Hosting LLC
+..............................
+[ Performing DNS Blacklist check ]
+✖  Blacklisted > abuse-contacts.abusix.org
+✖  Blacklisted > bl.fmb.la
+✖  Blacklisted > cbl.abuseat.org
+✖  Blacklisted > dnsbl.justspam.org
+✖  Blacklisted > dnsbl.isx.fr
+✖  Blacklisted > dnsbl.spfbl.net
+✖  Blacklisted > all.s5h.net
+✖  Blacklisted > free.v4bl.org
+✖  Blacklisted > origin.asn.cymru.com
+✖  Blacklisted > origin.asn.spameatingmonkey.net
+✖  Blacklisted > peer.asn.cymru.com
+✖  Blacklisted > zen.spamhaus.org
 ```
 
 #### Multiple inline
