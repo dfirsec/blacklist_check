@@ -116,11 +116,11 @@ class ProcessBL():
 
             print(f"\n{tc.PROCESSING} Last Modified: {self.modified_date(BLACKLIST)}")  # nopep8
         except FileNotFoundError:
-            self.outdated_file()
+            self.outdated()
 
     def update_list(self):
         bl_dict = dict()
-        print(f"{tc.GREEN} [ Updating ]{tc.RESET}")
+        print(f"{tc.GREEN}[ Updating ]{tc.RESET}")
         with open(BLACKLIST, 'w') as json_file:
             bl_dict["BLACKLIST"] = {}
             for name, url in self.read_list():
@@ -312,14 +312,17 @@ class ProcessBL():
         except Exception as err:
             return err
 
-    def outdated_file(self):
+    def outdated(self):
         # Check if blacklist is outdated
         try:
             file_time = os.path.getmtime(BLACKLIST)
             if (time.time() - file_time) / 3600 > 24:
                 print(tc.OUTDATED)
+                return True
         except FileNotFoundError:
             sys.exit(tc.MISSING)
+        else:
+            return False
 
 
 class DNSBL(object):
@@ -427,13 +430,14 @@ def main(update, show, query, whois, file, insert, remove):
 
     if show:
         pbl.list_count()
-        pbl.outdated_file()
+        pbl.outdated()
 
     if update:
-        if pbl.outdated_file():
+        print(f"{tc.GREEN}[ Checking Feeds ]{tc.RESET}")
+        if bool(pbl.outdated()):
             pbl.update_list()
             pbl.list_count()
-        elif dbl.update_dnsbl():
+        elif bool(dbl.update_dnsbl()):
             dbl.update_dnsbl()
         else:
             print("\nAll feeds are current.")
@@ -468,7 +472,7 @@ def main(update, show, query, whois, file, insert, remove):
         pbl.remove_feed()
 
     if query:
-        pbl.outdated_file()
+        pbl.outdated()
         IPs = []
         for arg in query:
             try:
@@ -487,7 +491,7 @@ def main(update, show, query, whois, file, insert, remove):
             dbl.dnsbl_mapper()
 
     if file:
-        pbl.outdated_file()
+        pbl.outdated()
         try:
             with open(file) as infile:
                 IPs = [line.strip() for line in infile.readlines()]
