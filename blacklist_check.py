@@ -124,7 +124,7 @@ class ProcessBL():
         with open(BLACKLIST, 'w') as json_file:
             bl_dict["BLACKLIST"] = {}
             for name, url in self.read_list():
-                print(f"  {tc.PROCESSING} {name:20}", end='\t\r')
+                logger.success(f"  {tc.PROCESSING} {name:20}")
                 bl_dict["BLACKLIST"][name] = self.get_list(url)  # nopep8
 
             # Remove duplicate IP addresses and update
@@ -326,8 +326,9 @@ class ProcessBL():
 
 
 class DNSBL(object):
-    def __init__(self, host):
+    def __init__(self, host, threads):
         self.host = host
+        self.threads = threads
         self.COUNT = 0
 
     def update_dnsbl(self):
@@ -400,12 +401,12 @@ class DNSBL(object):
         #         dns.resolver.NoAnswer):
         #     pass
 
-    def dnsbl_mapper(self):
+    def dnsbl_mapper(self, threads=None):
         with open(FEEDS) as json_file:
             data = json.load(json_file)
         dnsbl = [url for url in data['DNS Blacklists']['DNSBL']]
 
-        with ThreadPoolExecutor(max_workers=50) as executor:
+        with ThreadPoolExecutor(max_workers=threads) as executor:
             dnsbl_map = {
                 executor.submit(self.dnsbl_query, url): url for url in dnsbl
             }
@@ -419,9 +420,9 @@ class DNSBL(object):
                 logger.warning(f"\n[*] {host} is listed in {self.COUNT} block lists")  # nopep8
 
 
-def main(update, force, show, query, whois, file, insert, remove):
+def main(update, force, show, query, threads, whois, file, insert, remove):
     pbl = ProcessBL()
-    dbl = DNSBL(host=query)
+    dbl = DNSBL(host=query, threads=threads)
 
     # check arguments
     if len(sys.argv[1:]) == 0:
@@ -441,11 +442,11 @@ def main(update, force, show, query, whois, file, insert, remove):
             dbl.update_dnsbl()
         else:
             print("\nAll feeds are current.")
-    
+
     if force:
-        pbl.update_list()
-        dbl.update_dnsbl()
-        pbl.list_count()
+         pbl.update_list()
+         dbl.update_dnsbl()
+         pbl.list_count()
 
     if insert:
         while True:
@@ -493,7 +494,7 @@ def main(update, force, show, query, whois, file, insert, remove):
 
         if len(query) == 1:
             print(f"{tc.DOTSEP}\n{tc.GREEN}[ Reputation Block List Check ]{tc.RESET}")  # nopep8
-            dbl.dnsbl_mapper()
+            dbl.dnsbl_mapper(threads)
 
     if file:
         pbl.outdated()
@@ -518,14 +519,17 @@ if __name__ == "__main__":
     print(f"{tc.CYAN}{banner}{tc.RESET}")
 
     parser = argparse.ArgumentParser(description="IP Blacklist Check")
-    parser.add_argument('-u', dest='update', action='store_true',
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-u', dest='update', action='store_true',
                         help="update blacklist feeds")
-    parser.add_argument('-fu', dest='force', action='store_true',
-                        help="force update")
-    parser.add_argument('-s', dest='show', action='store_true',
+    group.add_argument('-fu', dest='force', action='store_true',
+                        help="force update of all feeds")                    
+    group.add_argument('-s', dest='show', action='store_true',
                         help="list blacklist feeds")
     parser.add_argument('-q', dest='query', nargs='+', metavar='query',
                         help="query a single or multiple ip addrs")
+    parser.add_argument('-t', dest='threads', nargs='?', type=int, 
+                        default=10, help="threads for rbl check (default 10, max 50)")
     parser.add_argument('-w', dest='whois', action='store_true',
                         help="perform ip whois lookup")
     parser.add_argument('-f', dest='file', metavar='file',
@@ -536,6 +540,9 @@ if __name__ == "__main__":
                         help='remove an existing blacklist feed')
     args = parser.parse_args()
 
+    if args.threads > 50:
+        sys.exit(f"{tc.ERROR} Exceeded max of 50 threads.{tc.RESET}")
+
     main(update=args.update, force=args.force, show=args.show, 
-         query=args.query, whois=args.whois, file=args.file, 
-         insert=args.insert, remove=args.remove)
+        query=args.query, threads=args.threads, whois=args.whois, 
+        file=args.file, insert=args.insert, remove=args.remove)
