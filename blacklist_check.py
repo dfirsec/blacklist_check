@@ -519,24 +519,25 @@ if __name__ == "__main__":
     print(f"{tc.CYAN}{banner}{tc.RESET}")
 
     parser = argparse.ArgumentParser(description="IP Blacklist Check")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-u', dest='update', action='store_true',
+    group1 = parser.add_mutually_exclusive_group()
+    group2 = parser.add_mutually_exclusive_group()
+    group1.add_argument('-u', dest='update', action='store_true',
                         help="update blacklist feeds")
-    group.add_argument('-fu', dest='force', action='store_true',
+    group1.add_argument('-fu', dest='force', action='store_true',
                         help="force update of all feeds")                    
-    group.add_argument('-s', dest='show', action='store_true',
+    group1.add_argument('-s', dest='show', action='store_true',
                         help="list blacklist feeds")
-    parser.add_argument('-q', dest='query', nargs='+', metavar='query',
+    group2.add_argument('-q', dest='query', nargs='+', metavar='query',
                         help="query a single or multiple ip addrs")
     parser.add_argument('-t', dest='threads', nargs='?', type=int, 
                         default=10, help="threads for rbl check (default 10, max 50)")
     parser.add_argument('-w', dest='whois', action='store_true',
                         help="perform ip whois lookup")
-    parser.add_argument('-f', dest='file', metavar='file',
+    group2.add_argument('-f', dest='file', metavar='file',
                         help="query a list of ip addrs from file")
-    parser.add_argument('-i', dest='insert', action='store_true',
+    group2.add_argument('-i', dest='insert', action='store_true',
                         help='insert a new blacklist feed')
-    parser.add_argument('-r', dest='remove', action='store_true',
+    group2.add_argument('-r', dest='remove', action='store_true',
                         help='remove an existing blacklist feed')
     args = parser.parse_args()
 
