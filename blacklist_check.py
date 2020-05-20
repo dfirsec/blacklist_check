@@ -419,7 +419,7 @@ class DNSBL(object):
                 logger.warning(f"\n[*] {host} is listed in {self.COUNT} block lists")  # nopep8
 
 
-def main(update, show, query, whois, file, insert, remove):
+def main(update, force, show, query, whois, file, insert, remove):
     pbl = ProcessBL()
     dbl = DNSBL(host=query)
 
@@ -441,6 +441,11 @@ def main(update, show, query, whois, file, insert, remove):
             dbl.update_dnsbl()
         else:
             print("\nAll feeds are current.")
+    
+    if force:
+        pbl.update_list()
+        dbl.update_dnsbl()
+        pbl.list_count()
 
     if insert:
         while True:
@@ -515,6 +520,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="IP Blacklist Check")
     parser.add_argument('-u', dest='update', action='store_true',
                         help="update blacklist feeds")
+    parser.add_argument('-fu', dest='force', action='store_true',
+                        help="force update")
     parser.add_argument('-s', dest='show', action='store_true',
                         help="list blacklist feeds")
     parser.add_argument('-q', dest='query', nargs='+', metavar='query',
@@ -529,6 +536,6 @@ if __name__ == "__main__":
                         help='remove an existing blacklist feed')
     args = parser.parse_args()
 
-    main(update=args.update, show=args.show, query=args.query,
-         whois=args.whois, file=args.file, insert=args.insert,
-         remove=args.remove)
+    main(update=args.update, force=args.force, show=args.show, 
+         query=args.query, whois=args.whois, file=args.file, 
+         insert=args.insert, remove=args.remove)
