@@ -152,7 +152,7 @@ class ProcessBL():
                 json.dump(feeds_dict, json_file,
                           ensure_ascii=False,
                           indent=4)
-            print(f'{tc.SUCCESS} Added feed: "{feed}": "{url}"')
+            print(f'[*] Added feed: "{feed}": "{url}"')
 
             print(f"\n{tc.CYAN}[ Updating new feed ]{tc.RESET}")
             with open(BLACKLIST) as json_file:
@@ -451,21 +451,21 @@ def main(update, force, show, query, threads, whois, file, insert, remove):
     if insert:
         while True:
             try:
-                feed = input("Feed name: ")
-                url = input("Feed url: ")
+                feed = input("[>] Feed name: ")
+                url = input("[>] Feed url: ")
             except KeyboardInterrupt:
                 sys.exit()
             if feed and url:
-                print(f"\n{tc.CYAN}[ Checking URL ]{tc.RESET}")
+                print(f"[*] Checking URL{tc.RESET}")
                 try:
                     urllib.request.urlopen(url, timeout=3)
-                    print(f"{tc.SUCCESS} URL is good")
-                    confirm = input(f'Insert the following feed (y/n)? \n{feed}: {url} ')  # nopep8
+                    print(f"[*] URL is good")
+                    confirm = input(f'[?] Insert the following feed? \nName: {feed} | URL: {url} {tc.YELLOW}(Y/n){tc.RESET}: ')  # nopep8
                     if confirm.lower() == 'y':
                         pbl.add_feed(feed=feed.replace(',', ''),
                                      url=url.replace(',', ''))
                     else:
-                        sys.exit(f"Request canceled")
+                        sys.exit(f"[!] Request canceled")
                     break
 
                 except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
