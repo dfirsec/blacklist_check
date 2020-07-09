@@ -23,6 +23,7 @@ import coloredlogs
 import dns.resolver
 import requests
 import verboselogs
+from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
 
 from utils.termcolors import Termcolor as tc
@@ -324,6 +325,19 @@ class ProcessBL():
         else:
             return False
 
+    def ip46_qry(self, ip):
+        ip = ''.join(ip)
+        url = f'https://ip-46.com/{ip}'
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text, features="lxml")
+        metadata = soup.find_all('meta')
+        notdetected = [meta.attrs['content']
+                       for meta in metadata if 'name' in meta.attrs and meta.attrs['name'] == 'description']
+
+        detection = '. IP-46.com'.join(notdetected[0].split('. IP-46.com')[0:-1])  # nopep8
+
+        return detection
+
 
 class DNSBL(object):
     def __init__(self, host, threads):
@@ -334,7 +348,6 @@ class DNSBL(object):
     def update_dnsbl(self):
         url = 'http://multirbl.valli.org/list/'
         page = requests.get(url).text
-        from bs4 import BeautifulSoup
         soup = BeautifulSoup(page, 'html.parser')
         table = soup.find("table")
         table_rows = table.find_all('tr')
@@ -444,9 +457,9 @@ def main(update, force, show, query, threads, whois, file, insert, remove):
             print("\nAll feeds are current.")
 
     if force:
-         pbl.update_list()
-         dbl.update_dnsbl()
-         pbl.list_count()
+        pbl.update_list()
+        dbl.update_dnsbl()
+        pbl.list_count()
 
     if insert:
         while True:
@@ -496,6 +509,12 @@ def main(update, force, show, query, threads, whois, file, insert, remove):
             print(f"{tc.DOTSEP}\n{tc.GREEN}[ Reputation Block List Check ]{tc.RESET}")  # nopep8
             dbl.dnsbl_mapper(threads)
 
+            print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ IP-46 IP Intel Check ]{tc.RESET}")  # nopep8
+            if "No abuse" not in pbl.ip46_qry(query):
+                print(pbl.ip46_qry(query))
+            else:
+                print(tc.CLEAN)
+
     if file:
         pbl.outdated()
         try:
@@ -524,12 +543,12 @@ if __name__ == "__main__":
     group1.add_argument('-u', dest='update', action='store_true',
                         help="update blacklist feeds")
     group1.add_argument('-fu', dest='force', action='store_true',
-                        help="force update of all feeds")                    
+                        help="force update of all feeds")
     group1.add_argument('-s', dest='show', action='store_true',
                         help="list blacklist feeds")
     group2.add_argument('-q', dest='query', nargs='+', metavar='query',
                         help="query a single or multiple ip addrs")
-    parser.add_argument('-t', dest='threads', nargs='?', type=int, 
+    parser.add_argument('-t', dest='threads', nargs='?', type=int,
                         default=10, help="threads for rbl check (default 10, max 50)")
     parser.add_argument('-w', dest='whois', action='store_true',
                         help="perform ip whois lookup")
@@ -542,8 +561,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.threads > 50:
-        sys.exit(f"{tc.ERROR} Exceeded max of 50 threads.{tc.RESET}")
+        sys.exit(f"{tc.ERROR} Exceeded max of 50 threads.{tc.RESET}")  # nopep8
 
-    main(update=args.update, force=args.force, show=args.show, 
-        query=args.query, threads=args.threads, whois=args.whois, 
-        file=args.file, insert=args.insert, remove=args.remove)
+    main(update=args.update, force=args.force, show=args.show,
+         query=args.query, threads=args.threads, whois=args.whois,
+         file=args.file, insert=args.insert, remove=args.remove)
