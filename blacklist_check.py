@@ -338,6 +338,28 @@ class ProcessBL():
 
         return detection
 
+    def urlhaus_base(self, ip):
+        base_url = "https://urlhaus-api.abuse.ch/v1/host/"
+        resp = requests.post(base_url, data={"host": ip})
+
+        if resp.status_code == 200:
+            return resp.json()
+
+    def urlhaus_qry(self, ip):
+        if self.urlhaus_base(ip)['query_status'] == "no_results":
+            print("No results for", ip)
+        else:
+            if self.urlhaus_base(ip)['urls']:
+                for k in self.urlhaus_base(ip)['urls']:
+                    if k['url_status'] == "online":
+                        print(f"Status: {tc.RED}{k['url_status'].title()}{tc.RESET}")  # nopep8
+                        print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")  # nopep8
+                        print(f"Tags: {', '.join(k['tags'])}\n")  # nopep8
+                    else:
+                        print(f"Status: {k['url_status'].title()}")
+                        print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")  # nopep8
+                        print(f"Tags: {', '.join(k['tags'])}\n")  # nopep8
+
 
 class DNSBL(object):
     def __init__(self, host, threads):
@@ -406,7 +428,7 @@ class DNSBL(object):
                 dns.resolver.NoNameservers,
                 dns.resolver.NoAnswer):
             pass
-        # # Option: displays not listed entries
+        # # Option: displays entries that are not listed
         # except dns.resolver.NXDOMAIN:
         #     logger.notice(f'Not listed: {blacklist}')
         # except (dns.resolver.Timeout,
@@ -506,7 +528,7 @@ def main(update, force, show, query, threads, whois, file, insert, remove):
             pbl.ip_matches(IPs)
 
         if len(query) == 1:
-            print(f"{tc.DOTSEP}\n{tc.GREEN}[ Reputation Block List Check ]{tc.RESET}")  # nopep8
+            print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ Reputation Block List Check ]{tc.RESET}")  # nopep8
             dbl.dnsbl_mapper(threads)
 
             print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ IP-46 IP Intel Check ]{tc.RESET}")  # nopep8
@@ -514,6 +536,9 @@ def main(update, force, show, query, threads, whois, file, insert, remove):
                 print(pbl.ip46_qry(query))
             else:
                 print(tc.CLEAN)
+
+            print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ URLhaus Check ]{tc.RESET}")  # nopep8
+            pbl.urlhaus_qry(query)
 
     if file:
         pbl.outdated()
