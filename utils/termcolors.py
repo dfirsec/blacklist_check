@@ -25,6 +25,6 @@ class Termcolor:
     SCANNER = f"{WARNING} {BOLD}{'SCANNER':2} {RESET}"
     BLACKLISTED = f"{RED}\u2716{RESET}  Blacklisted >"
     CLEAN = f"{SUCCESS} {GRAY}{'NOT LISTED':2} "
-    DOTSEP = f"{GRAY}{'.' * 30}{RESET}"
+    DOTSEP = f"{GRAY}{'.' * 32}{RESET}"
     MISSING = f"\n{WARNING} Blacklist file missing -- use the '-u' option to download.\n{YELLOW}  Run: python blacklist_downloader.py -u{RESET}"
     OUTDATED = f"{WARNING}{YELLOW} Blacklist file is older than 1 day - - use the '-u' option to update.\n{RESET}"
