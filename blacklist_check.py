@@ -334,7 +334,7 @@ class ProcessBL():
 
         detection = soup.title.get_text()
         if "No abuse detected" not in detection:
-            print('. '.join(metadata["content"].split('. ')[0:2]))
+            print('. '.join(metadata["content"].split('. ')[0:2]).split("IP-46.com", 1)[0])
             return detection
         else:
             print(tc.CLEAN)
@@ -530,13 +530,13 @@ def main(update, force, show, query, threads, whois, file, insert, remove):
 
         if len(query) == 1:
             print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ Reputation Block List Check ]{tc.RESET}")  # nopep8
-            dbl.dnsbl_mapper(threads)
+            # dbl.dnsbl_mapper(threads)
 
             print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ IP-46 IP Intel Check ]{tc.RESET}")  # nopep8
             pbl.ip46_qry(query)
 
             print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ URLhaus Check ]{tc.RESET}")  # nopep8
-            pbl.urlhaus_qry(query)
+            # pbl.urlhaus_qry(query)
 
     if file:
         pbl.outdated()
