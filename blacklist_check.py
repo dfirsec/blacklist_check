@@ -330,13 +330,14 @@ class ProcessBL():
         url = f'https://ip-46.com/{ip}'
         r = requests.get(url)
         soup = BeautifulSoup(r.text, features="lxml")
-        metadata = soup.find_all('meta')
-        notdetected = [meta.attrs['content']
-                       for meta in metadata if 'name' in meta.attrs and meta.attrs['name'] == 'description']
+        metadata = soup.find('meta')
 
-        detection = '. IP-46.com'.join(notdetected[0].split('. IP-46.com')[0:-1])  # nopep8
-
-        return detection
+        detection = soup.title.get_text()
+        if "No abuse detected" not in detection:
+            print('. '.join(metadata["content"].split('. ')[0:2]))
+            return detection
+        else:
+            print(tc.CLEAN)
 
     def urlhaus_base(self, ip):
         base_url = "https://urlhaus-api.abuse.ch/v1/host/"
@@ -347,7 +348,7 @@ class ProcessBL():
 
     def urlhaus_qry(self, ip):
         if self.urlhaus_base(ip)['query_status'] == "no_results":
-            print("No results for", ip)
+            print(tc.CLEAN)
         else:
             if self.urlhaus_base(ip)['urls']:
                 for k in self.urlhaus_base(ip)['urls']:
@@ -532,10 +533,7 @@ def main(update, force, show, query, threads, whois, file, insert, remove):
             dbl.dnsbl_mapper(threads)
 
             print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ IP-46 IP Intel Check ]{tc.RESET}")  # nopep8
-            if "No abuse" not in pbl.ip46_qry(query):
-                print(pbl.ip46_qry(query))
-            else:
-                print(tc.CLEAN)
+            pbl.ip46_qry(query)
 
             print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ URLhaus Check ]{tc.RESET}")  # nopep8
             pbl.urlhaus_qry(query)
