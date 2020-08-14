@@ -471,7 +471,7 @@ def main(update, force, show, query, threads, whois, file, insert, remove):
 
     if update:
         print(f"{tc.GREEN}[ Checking Feeds ]{tc.RESET}")
-        if bool(pbl.outdated()):
+        if bool(pbl.outdated()) or os.path.getsize(BLACKLIST) == 0:
             pbl.update_list()
             pbl.list_count()
         elif bool(dbl.update_dnsbl()):
