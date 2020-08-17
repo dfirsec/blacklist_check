@@ -22,11 +22,15 @@ from pathlib import Path
 import coloredlogs
 import dns.resolver
 import requests
+import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
 
 from utils.termcolors import Termcolor as tc
+
+#suppress certificate verification
+urllib3.disable_warnings()
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
@@ -78,7 +82,7 @@ class ProcessBL():
         # Exclude IP if 1st and last octet are zero
         ipv4 = re.compile(r"(?![0])\d{1,}\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
         try:
-            resp = requests.get(url, timeout=5, headers=self.headers())
+            resp = requests.get(url, timeout=5, headers=self.headers(), verify=False)  # nopep8
             resp.encoding = 'utf-8'
             if resp.status_code == 200:
                 return [x.group() for x in re.finditer(ipv4, resp.text)]
@@ -572,7 +576,7 @@ if __name__ == "__main__":
     group2.add_argument('-q', dest='query', nargs='+', metavar='query',
                         help="query a single or multiple ip addrs")
     parser.add_argument('-t', dest='threads', nargs='?', type=int,
-                        default=10, help="threads for rbl check (default 10, max 50)")
+                        default=25, help="threads for rbl check (default 25, max 50)")
     parser.add_argument('-w', dest='whois', action='store_true',
                         help="perform ip whois lookup")
     group2.add_argument('-f', dest='file', metavar='file',
