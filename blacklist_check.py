@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "2.0"
+__version__ = "2.1"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 import argparse
@@ -14,6 +12,7 @@ import re
 import sys
 import time
 import urllib
+import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from ipaddress import IPv4Address, ip_address
@@ -29,13 +28,15 @@ from ipwhois import IPWhois, exceptions
 
 from utils.termcolors import Termcolor as tc
 
-#suppress certificate verification
+
+# suppress dnspython feature deprecation warning
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+# suppress certificate verification
 urllib3.disable_warnings()
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
-
-# Base files
 BLACKLIST = BASE_DIR.joinpath('utils/blacklist.json')
 SCANNERS = BASE_DIR.joinpath('utils/scanners.json')
 FEEDS = BASE_DIR.joinpath('utils/feeds.json')
@@ -172,7 +173,6 @@ class ProcessBL():
 
             print(f"{tc.SUCCESS} {tc.YELLOW}{len(bl_list[feed]):,}{tc.RESET} IPs added to '{feed}'")  # nopep8
 
-    # def remove_feed(self, feed):
     def remove_feed(self):
         with open(FEEDS) as json_file:
             feeds_dict = json.load(json_file)
@@ -214,8 +214,8 @@ class ProcessBL():
             with open(SCANNERS) as json_file:
                 scanner_ip = json.load((json_file))
 
-        except FileNotFoundError:
-            sys.exit(tc.MISSING)
+        except Exception as e:
+            sys.exit(e)
 
         # Compare and find blacklist matches
         found = []
@@ -322,10 +322,9 @@ class ProcessBL():
         try:
             file_time = os.path.getmtime(BLACKLIST)
             if (time.time() - file_time) / 3600 > 24:
-                print(tc.OUTDATED)
                 return True
-        except FileNotFoundError:
-            sys.exit(tc.MISSING)
+        except Exception as e:
+            sys.exit(e)
         else:
             return False
 
@@ -338,7 +337,8 @@ class ProcessBL():
 
         detection = soup.title.get_text()
         if "No abuse detected" not in detection:
-            print('. '.join(metadata["content"].split('. ')[0:2]).split("IP-46.com", 1)[0])
+            print('. '.join(metadata["content"].split(
+                '. ')[0:2]).split("IP-46.com", 1)[0])
             return detection
         else:
             print(tc.CLEAN)
@@ -359,11 +359,17 @@ class ProcessBL():
                     if k['url_status'] == "online":
                         print(f"Status: {tc.RED}{k['url_status'].title()}{tc.RESET}")  # nopep8
                         print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")  # nopep8
-                        print(f"Tags: {', '.join(k['tags'])}\n")  # nopep8
+                        if k['tags']:
+                            print(f"Tags: {', '.join(k['tags'])}\n")  # nopep8
+                        else:
+                            print("\n")
                     else:
                         print(f"Status: {k['url_status'].title()}")
                         print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")  # nopep8
-                        print(f"Tags: {', '.join(k['tags'])}\n")  # nopep8
+                        if k['tags']:
+                            print(f"Tags: {', '.join(k['tags'])}\n")  # nopep8
+                        else:
+                            print("\n")
 
 
 class DNSBL(object):
@@ -405,6 +411,23 @@ class DNSBL(object):
         else:
             return False
 
+    def resolve_dns(self, qry):
+        try:
+            resolver = dns.resolver.Resolver()
+            resolver.timeout = 3
+            resolver.lifetime = 3
+            answer = resolver.query(qry, "A")
+
+            return answer
+
+        except (dns.resolver.NXDOMAIN,
+                dns.resolver.Timeout,
+                dns.resolver.NoNameservers,
+                dns.resolver.NoAnswer):
+            pass
+        except DeprecationWarning:
+            pass
+
     def dnsbl_query(self, blacklist):
         host = str(''.join(self.host))
 
@@ -413,33 +436,20 @@ class DNSBL(object):
                  '127.0.0.4', '127.0.0.5', '127.0.0.6', '127.0.0.7',
                  '127.0.0.9', '127.0.1.4', '127.0.1.5', '127.0.1.6',
                  '127.0.0.10', '127.0.0.11', '127.0.0.39', '127.0.1.103',
-                 '127.0.1.104', '127.0.1.105', '127.0.1.106']
+                 '127.0.1.104', '127.0.1.105', '127.0.1.106', '127.0.1.108']
 
         try:
-            resolver = dns.resolver.Resolver()
-            resolver.timeout = 3
-            resolver.lifetime = 3
-            qry = ''
-            try:
-                qry = ip_address(host).reverse_pointer.strip('.in-addr.arpa') + "." + blacklist  # nopep8
-            except Exception:
-                qry = host + "." + blacklist
-            answer = resolver.query(qry, "A")
+            qry = ip_address(host).reverse_pointer.replace('.in-addr.arpa', '') + "." + blacklist  # nopep8
+        except Exception:
+            qry = host + "." + blacklist
+
+        answer = self.resolve_dns(qry)
+        try:
             if any(str(answer[0]) in s for s in codes):
                 logger.success(f"{tc.RED}\u2716{tc.RESET}  Blacklisted > {blacklist}")  # nopep8
                 self.COUNT += 1
-        except (dns.resolver.NXDOMAIN,
-                dns.resolver.Timeout,
-                dns.resolver.NoNameservers,
-                dns.resolver.NoAnswer):
+        except Exception:
             pass
-        # # Option: displays entries that are not listed
-        # except dns.resolver.NXDOMAIN:
-        #     logger.notice(f'Not listed: {blacklist}')
-        # except (dns.resolver.Timeout,
-        #         dns.resolver.NoNameservers,
-        #         dns.resolver.NoAnswer):
-        #     pass
 
     def dnsbl_mapper(self, threads=None):
         with open(FEEDS) as json_file:
@@ -460,35 +470,101 @@ class DNSBL(object):
                 logger.warning(f"\n[*] {host} is listed in {self.COUNT} block lists")  # nopep8
 
 
-def main(update, force, show, query, threads, whois, file, insert, remove):
+def parser():
+    p = argparse.ArgumentParser(description="IP Blacklist Check")
+    group1 = p.add_mutually_exclusive_group()
+    group2 = p.add_mutually_exclusive_group()
+    group1.add_argument('-u', dest='update', action='store_true',
+                        help="update blacklist feeds")
+    group1.add_argument('-fu', dest='force', action='store_true',
+                        help="force update of all feeds")
+    group1.add_argument('-s', dest='show', action='store_true',
+                        help="list blacklist feeds")
+    group2.add_argument('-q', dest='query', nargs='+', metavar='query',
+                        help="query a single or multiple ip addrs")
+    p.add_argument('-t', dest='threads', nargs='?', type=int, metavar='threads',
+                   default=25, help="threads for rbl check (default 25, max 50)")
+    p.add_argument('-w', dest='whois', action='store_true',
+                   help="perform ip whois lookup")
+    group2.add_argument('-f', dest='file', metavar='file',
+                        help="query a list of ip addresses from file")
+    group2.add_argument('-i', dest='insert', action='store_true',
+                        help='insert a new blacklist feed')
+    group2.add_argument('-r', dest='remove', action='store_true',
+                        help='remove an existing blacklist feed')
+
+    return p
+
+
+def main():
+    p = parser()
+    args = p.parse_args()
+
     pbl = ProcessBL()
-    dbl = DNSBL(host=query, threads=threads)
+    dbl = DNSBL(host=args.query, threads=args.threads)
 
     # check arguments
     if len(sys.argv[1:]) == 0:
-        parser.print_help()
-        parser.exit()
+        p.print_help()
+        p.exit()
 
-    if show:
+    if not Path('utils/blacklist.json').is_file():
+        print(f"{tc.YELLOW}Blacklist file is missing...{tc.RESET}\n")
+        pbl.update_list()
+
+    if args.query:
+        IPs = []
+        for arg in args.query:
+            try:
+                IPv4Address(arg.replace(',', ''))
+                IPs.append(arg.replace(',', ''))
+            except ValueError:
+                print(f"{tc.WARNING} {'INVALID IP':12} {arg}")
+        if args.whois:
+            print(f"{tc.DOTSEP}\n{tc.GREEN}[ Performing IP whois lookup ]{tc.RESET}\n")  # nopep8
+            pbl.ip_matches(IPs, whois=args.whois)
+        else:
+            pbl.ip_matches(IPs)
+
+        if len(args.query) == 1:
+            print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ Reputation Block List Check ]{tc.RESET}")  # nopep8
+            dbl.dnsbl_mapper(args.threads)
+
+            print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ IP-46 IP Intel Check ]{tc.RESET}")  # nopep8
+            pbl.ip46_qry(args.query)
+
+            print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ URLhaus Check ]{tc.RESET}")  # nopep8
+            pbl.urlhaus_qry(args.query)
+
+    if args.file:
+        pbl.outdated()
+        try:
+            with open(args.file) as infile:
+                IPs = [line.strip() for line in infile.readlines()]
+        except FileNotFoundError:
+            sys.exit(f"{tc.WARNING} No such file: {args.file}")
+        pbl.ip_matches(IPs)
+
+    if args.show:
         pbl.list_count()
         pbl.outdated()
 
-    if update:
-        print(f"{tc.GREEN}[ Checking Feeds ]{tc.RESET}")
-        if bool(pbl.outdated()) or os.path.getsize(BLACKLIST) == 0:
+    if args.update:
+        print(tc.CHECK_FEEDS)
+        if bool(pbl.outdated()):
             pbl.update_list()
             pbl.list_count()
-        elif bool(dbl.update_dnsbl()):
+        if bool(dbl.update_dnsbl()):
             dbl.update_dnsbl()
         else:
-            print("\nAll feeds are current.")
+            print(tc.CURRENT)
 
-    if force:
+    if args.force:
         pbl.update_list()
         dbl.update_dnsbl()
         pbl.list_count()
 
-    if insert:
+    if args.insert:
         while True:
             try:
                 feed = input("[>] Feed name: ")
@@ -514,42 +590,11 @@ def main(update, force, show, query, threads, whois, file, insert, remove):
                 sys.exit(f"{tc.ERROR} Please include the feed name and url.")
                 break
 
-    if remove:
+    if args.remove:
         pbl.remove_feed()
 
-    if query:
-        pbl.outdated()
-        IPs = []
-        for arg in query:
-            try:
-                IPv4Address(arg.replace(',', ''))
-                IPs.append(arg.replace(',', ''))
-            except ValueError:
-                print(f"{tc.WARNING} {'INVALID IP':12} {arg}")
-        if whois:
-            print(f"{tc.DOTSEP}\n{tc.GREEN}[ Performing IP whois lookup ]{tc.RESET}\n")  # nopep8
-            pbl.ip_matches(IPs, whois=whois)
-        else:
-            pbl.ip_matches(IPs)
-
-        if len(query) == 1:
-            print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ Reputation Block List Check ]{tc.RESET}")  # nopep8
-            dbl.dnsbl_mapper(threads)
-
-            print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ IP-46 IP Intel Check ]{tc.RESET}")  # nopep8
-            pbl.ip46_qry(query)
-
-            print(f"\n{tc.DOTSEP}\n{tc.GREEN}[ URLhaus Check ]{tc.RESET}")  # nopep8
-            pbl.urlhaus_qry(query)
-
-    if file:
-        pbl.outdated()
-        try:
-            with open(file) as infile:
-                IPs = [line.strip() for line in infile.readlines()]
-        except FileNotFoundError:
-            sys.exit(f"{tc.WARNING} No such file: {file}")
-        pbl.ip_matches(IPs)
+    if args.threads > 50:
+        sys.exit(f"{tc.ERROR} Exceeded max of 50 threads.{tc.RESET}")  # nopep8
 
 
 if __name__ == "__main__":
@@ -563,33 +608,4 @@ if __name__ == "__main__":
     '''
 
     print(f"{tc.CYAN}{banner}{tc.RESET}")
-
-    parser = argparse.ArgumentParser(description="IP Blacklist Check")
-    group1 = parser.add_mutually_exclusive_group()
-    group2 = parser.add_mutually_exclusive_group()
-    group1.add_argument('-u', dest='update', action='store_true',
-                        help="update blacklist feeds")
-    group1.add_argument('-fu', dest='force', action='store_true',
-                        help="force update of all feeds")
-    group1.add_argument('-s', dest='show', action='store_true',
-                        help="list blacklist feeds")
-    group2.add_argument('-q', dest='query', nargs='+', metavar='query',
-                        help="query a single or multiple ip addrs")
-    parser.add_argument('-t', dest='threads', nargs='?', type=int,
-                        default=25, help="threads for rbl check (default 25, max 50)")
-    parser.add_argument('-w', dest='whois', action='store_true',
-                        help="perform ip whois lookup")
-    group2.add_argument('-f', dest='file', metavar='file',
-                        help="query a list of ip addrs from file")
-    group2.add_argument('-i', dest='insert', action='store_true',
-                        help='insert a new blacklist feed')
-    group2.add_argument('-r', dest='remove', action='store_true',
-                        help='remove an existing blacklist feed')
-    args = parser.parse_args()
-
-    if args.threads > 50:
-        sys.exit(f"{tc.ERROR} Exceeded max of 50 threads.{tc.RESET}")  # nopep8
-
-    main(update=args.update, force=args.force, show=args.show,
-         query=args.query, threads=args.threads, whois=args.whois,
-         file=args.file, insert=args.insert, remove=args.remove)
+    main()
