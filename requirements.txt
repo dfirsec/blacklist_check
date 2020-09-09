@@ -4,4 +4,8 @@ coloredlogs==14.0
 ipwhois==1.1.0
 lxml==4.5.2
 requests==2.24.0
+<<<<<<< HEAD
 verboselogs==1.7
+=======
+verboselogs==1.7
+>>>>>>> b8f85263b45b94871eea6f72b7863d2c7bc069b1

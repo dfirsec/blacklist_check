@@ -19,6 +19,10 @@ from ipaddress import IPv4Address, ip_address
 from pathlib import Path
 
 import coloredlogs
+<<<<<<< HEAD
+=======
+import dns.resolver
+>>>>>>> b8f85263b45b94871eea6f72b7863d2c7bc069b1
 import requests
 import urllib3
 import verboselogs
@@ -28,6 +32,13 @@ from ipwhois import IPWhois, exceptions
 import dns.resolver
 from utils.termcolors import Termcolor as tc
 
+<<<<<<< HEAD
+=======
+
+# suppress dnspython feature deprecation warning
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+>>>>>>> b8f85263b45b94871eea6f72b7863d2c7bc069b1
 # suppress certificate verification
 urllib3.disable_warnings()
 
@@ -412,7 +423,11 @@ class DNSBL(object):
             resolver = dns.resolver.Resolver()
             resolver.timeout = 3
             resolver.lifetime = 3
+<<<<<<< HEAD
             answer = resolver.resolve(qry, "A")
+=======
+            answer = resolver.query(qry, "A")
+>>>>>>> b8f85263b45b94871eea6f72b7863d2c7bc069b1
 
             return answer
 
@@ -515,7 +530,11 @@ def main():
                 IPv4Address(arg.replace(',', ''))
                 IPs.append(arg.replace(',', ''))
             except ValueError:
+<<<<<<< HEAD
                 sys.exit(f"{tc.WARNING} {'INVALID IP':12} {arg}")
+=======
+                print(f"{tc.WARNING} {'INVALID IP':12} {arg}")
+>>>>>>> b8f85263b45b94871eea6f72b7863d2c7bc069b1
         if args.whois:
             print(f"{tc.DOTSEP}\n{tc.GREEN}[ Performing IP whois lookup ]{tc.RESET}\n")  # nopep8
             pbl.ip_matches(IPs, whois=args.whois)
