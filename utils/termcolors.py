@@ -25,9 +25,9 @@ class Termcolor:
 
     # queries
     DOWNLOAD_ERR = f"{YELLOW} [DOWNLOAD ERROR]"
-    SCANNER = f"{WARNING} {BOLD}{'SCANNER':2}"
-    BLACKLISTED = f"{RED}\u2716{RESET}  Blacklisted >"
-    CLEAN = f"{SUCCESS} {GRAY}{'NOT LISTED':2} "
+    SCANNER = f"{WARNING} {BOLD}{' SCANNER':2}"
+    BLACKLISTED = f"{RED}\u2716{RESET}  Blacklisted"
+    CLEAN = f"{SUCCESS} {GRAY}{' NOT LISTED':2} "
     DOTSEP = f"{GRAY}{'.' * 32}{RESET}"
 
     # feeds

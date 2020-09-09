@@ -219,16 +219,20 @@ class ProcessBL():
 
         # Compare and find blacklist matches
         found = []
+        global name
         for name, bl_ip in ip_list['BLACKLIST'].items():
             try:
                 matches = set(IPS) & set(bl_ip)
                 for ip in matches:
                     if whois:
-                        print(f"\n{tc.BLACKLISTED} {tc.YELLOW}{name}{tc.RESET}")  # nopep8
+                        print(f"\n{tc.BLACKLISTED} [{ip}] > {tc.YELLOW}{name}{tc.RESET}")  # nopep8
+                        print(f"{tc.BOLD}{'   Location:':10} {tc.RESET}{self.geo_locate(ip)}{tc.BOLD}")  # nopep8
+                        print(f"{tc.BOLD}{'   Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
                         if ip not in found:
                             found.append(ip)
                     else:
-                        print(f"\n{tc.BLACKLISTED} {tc.YELLOW}{name}{tc.RESET}")  # nopep8
+                        print(f"\n{tc.BLACKLISTED} [{ip}] > {tc.YELLOW}{name}{tc.RESET}")  # nopep8
+                        print(f"{tc.BOLD}{'   Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
                         if ip not in found:
                             found.append(ip)
             except ValueError:
@@ -242,11 +246,15 @@ class ProcessBL():
                 matches = set(IPS) & set(sc_ip)
                 for ip in matches:
                     if whois:
-                        print(f"\n{tc.SCANNER}is: {tc.YELLOW}{name}{tc.RESET}")  # nopep8
+                        print(f"\n{tc.SCANNER} [{ip}] > {tc.YELLOW}{name}{tc.RESET}")  # nopep8
+                        print(f"{tc.BOLD}{'   Whois:':10} {tc.RESET}{self.whois_ip(ip)}")  # nopep8
+                        print(f"{tc.BOLD}{'   Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
                         if ip not in found:
                             found.append(ip)
                     else:
-                        print(f"\n{tc.SCANNER}{tc.YELLOW}{name}{tc.RESET}")
+                        print(
+                            f"\n{tc.SCANNER} [{ip}] > {tc.YELLOW}{name}{tc.RESET}")
+                        print(f"{tc.BOLD}{'   Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
                         if ip not in found:
                             found.append(ip)
             except ValueError:
@@ -254,30 +262,17 @@ class ProcessBL():
             except TypeError:
                 continue
 
-        # report matches
-        if found:
-            print(f"\n{('-' * 12)} IP Info {('-' * 12)}")
-            for ip in found:
-                print(f"{tc.BOLD}{'IP:':11}{ip}{tc.RESET}")
-                print(f"{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}")  # nopep8
-                if whois:
-                    print(f"{tc.BOLD}{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
-
         # not blacklisted
         nomatch = [ip for ip in IPS if ip not in found]
         if nomatch:
             for ip in nomatch:
                 if whois:
-                    print(f"\n{tc.CLEAN}")
-                    print(f"{('-' * 35)}")
-                    print(f"{tc.BOLD}{'IP:':10} {tc.RESET}{ip}")
-                    print(f"{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}{tc.BOLD}")  # nopep8
-                    print(f"{'Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
+                    print(f"\n{tc.CLEAN}{tc.RESET} [{ip}]")
+                    print(f"{tc.BOLD}{'   Location:':10} {tc.RESET}{self.geo_locate(ip)}{tc.BOLD}")  # nopep8
+                    print(f"{'   Whois:':10} {tc.RESET}{self.whois_ip(ip)}\n")  # nopep8
                 else:
-                    print(f"\n{tc.CLEAN}")
-                    print(f"{('-' * 35)}")
-                    print(f"{tc.BOLD}{'IP:':10} {tc.RESET}{ip}")
-                    print(f"{tc.BOLD}{'Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
+                    print(f"\n{tc.CLEAN}{tc.RESET} [{ip}]")
+                    print(f"{tc.BOLD}{'   Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
 
     def modified_date(self, _file):
         lastmod = os.stat(_file).st_mtime
