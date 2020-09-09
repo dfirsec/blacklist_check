@@ -17,11 +17,11 @@ class Termcolor:
     RESET = Style.RESET_ALL
 
     # unicode symbols
-    PROCESSING = CYAN + "\u279C " + RESET
-    SUCCESS = GREEN + "\u2714 " + RESET
-    WARNING = YELLOW + "\u03DF" + RESET
-    ERROR = RED + "\u2718" + RESET
-    QUESTION = YELLOW + "\uFF1F" + RESET
+    PROCESSING = f"{CYAN}\u279C{RESET}"
+    SUCCESS = f"{GREEN}\u2714{RESET}"
+    WARNING = f"{YELLOW}\u03DF{RESET}"
+    ERROR = f"{RED}\u2718{RESET}"
+    QUESTION = f"{YELLOW}\uFF1F{RESET}"
 
     # queries
     DOWNLOAD_ERR = f"{YELLOW} [DOWNLOAD ERROR]"
