@@ -1,4 +1,7 @@
-argparse
-colorama
-ipwhois
-requests
+bs4==0.0.1
+colorama==0.4.3
+coloredlogs==14.0
+ipwhois==1.1.0
+lxml==4.5.2
+requests==2.24.0
+verboselogs==1.7
