@@ -1,7 +1,3 @@
-__author__ = "DFIRSec (@pulsecode)"
-__version__ = "2.1"
-__description__ = "Check IP addresses against blacklists from various sources."
-
 import argparse
 import json
 import logging
@@ -19,7 +15,6 @@ from ipaddress import IPv4Address, ip_address
 from pathlib import Path
 
 import coloredlogs
-import dns.resolver
 import requests
 import urllib3
 import verboselogs
@@ -28,6 +23,10 @@ from ipwhois import IPWhois, exceptions
 
 import dns.resolver
 from utils.termcolors import Termcolor as tc
+
+__author__ = "DFIRSec (@pulsecode)"
+__version__ = "0.0.5"
+__description__ = "Check IP addresses against blacklists from various sources."
 
 
 # suppress dnspython feature deprecation warning
@@ -417,11 +416,7 @@ class DNSBL(object):
             resolver = dns.resolver.Resolver()
             resolver.timeout = 3
             resolver.lifetime = 3
-<<<<<<< HEAD
             answer = resolver.resolve(qry, "A")
-=======
-            answer = resolver.query(qry, "A")
->>>>>>> b8f85263b45b94871eea6f72b7863d2c7bc069b1
 
             return answer
 
@@ -524,11 +519,7 @@ def main():
                 IPv4Address(arg.replace(',', ''))
                 IPs.append(arg.replace(',', ''))
             except ValueError:
-<<<<<<< HEAD
                 sys.exit(f"{tc.WARNING} {'INVALID IP':12} {arg}")
-=======
-                print(f"{tc.WARNING} {'INVALID IP':12} {arg}")
->>>>>>> b8f85263b45b94871eea6f72b7863d2c7bc069b1
         if args.whois:
             print(f"{tc.DOTSEP}\n{tc.GREEN}[ Performing IP whois lookup ]{tc.RESET}\n")  # nopep8
             pbl.ip_matches(IPs, whois=args.whois)
