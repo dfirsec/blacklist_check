@@ -19,10 +19,7 @@ from ipaddress import IPv4Address, ip_address
 from pathlib import Path
 
 import coloredlogs
-<<<<<<< HEAD
-=======
 import dns.resolver
->>>>>>> b8f85263b45b94871eea6f72b7863d2c7bc069b1
 import requests
 import urllib3
 import verboselogs
@@ -32,13 +29,10 @@ from ipwhois import IPWhois, exceptions
 import dns.resolver
 from utils.termcolors import Termcolor as tc
 
-<<<<<<< HEAD
-=======
 
 # suppress dnspython feature deprecation warning
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
->>>>>>> b8f85263b45b94871eea6f72b7863d2c7bc069b1
 # suppress certificate verification
 urllib3.disable_warnings()
 
