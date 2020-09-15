@@ -15,17 +15,17 @@ from ipaddress import IPv4Address, ip_address
 from pathlib import Path
 
 import coloredlogs
+import dns.resolver
 import requests
 import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
 
-import dns.resolver
 from utils.termcolors import Termcolor as tc
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -54,10 +54,9 @@ coloredlogs.install(level='DEBUG', logger=logger, fmt='%(message)s',
 
 
 class ProcessBL():
-    def __init__(self):
-        pass
 
-    def headers(self):
+    @staticmethod
+    def headers():
         ua_list = [
             "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.38 Safari/537.36",
@@ -73,7 +72,8 @@ class ProcessBL():
         use_headers = {'user-agent': random.choice(ua_list)}
         return use_headers
 
-    def clr_scrn(self):
+    @staticmethod
+    def clr_scrn():
         if platform.system() == 'Windows':
             os.system('cls')
         else:
@@ -96,12 +96,14 @@ class ProcessBL():
         except requests.exceptions.RequestException as err:
             print(f"    {tc.DOWNLOAD_ERR} {tc.ERROR} {tc.GRAY}{err}{tc.RESET}")  # nopep8
 
-    def read_list(self):
+    @staticmethod
+    def read_list():
         with open(FEEDS) as json_file:
             data = json.load(json_file)
             return [[name, url] for name, url in data['Blacklist Feeds'].items()]
 
-    def sort_list(self, data):
+    @staticmethod
+    def sort_list(data):
         sort_name = sorted((name, ip_cnt) for (name, ip_cnt) in data["BLACKLIST"].items())  # nopep8
         for n, i in enumerate(sort_name, start=1):
             try:
@@ -173,7 +175,8 @@ class ProcessBL():
 
             print(f"{tc.SUCCESS} {tc.YELLOW}{len(bl_list[feed]):,}{tc.RESET} IPs added to '{feed}'")  # nopep8
 
-    def remove_feed(self):
+    @staticmethod
+    def remove_feed():
         with open(FEEDS) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict['Blacklist Feeds']
@@ -274,11 +277,13 @@ class ProcessBL():
                     print(f"\n{tc.CLEAN}{tc.RESET} [{ip}]")
                     print(f"{tc.BOLD}{'   Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
 
-    def modified_date(self, _file):
+    @staticmethod
+    def modified_date(_file):
         lastmod = os.stat(_file).st_mtime
         return datetime.strptime(time.ctime(lastmod), "%a %b %d %H:%M:%S %Y")
 
-    def geo_locate(self, ip):
+    @staticmethod
+    def geo_locate(ip):
         try:
             url = f'https://freegeoip.live/json/{ip}'
             resp = requests.get(url)
@@ -299,7 +304,8 @@ class ProcessBL():
         except Exception as err:
             print(f"[error] {err}\n")
 
-    def whois_ip(self, ip):
+    @staticmethod
+    def whois_ip(ip):
         try:
             # ref: https://ipwhois.readthedocs.io/en/latest/RDAP.html
             obj = IPWhois(ip)
@@ -312,7 +318,8 @@ class ProcessBL():
         except Exception as err:
             return err
 
-    def outdated(self):
+    @staticmethod
+    def outdated():
         # Check if blacklist is outdated
         try:
             file_time = os.path.getmtime(BLACKLIST)
@@ -323,7 +330,8 @@ class ProcessBL():
         else:
             return False
 
-    def ip46_qry(self, ip):
+    @staticmethod
+    def ip46_qry(ip):
         ip = ''.join(ip)
         url = f'https://ip-46.com/{ip}'
         r = requests.get(url)
@@ -338,7 +346,8 @@ class ProcessBL():
         else:
             print(tc.CLEAN)
 
-    def urlhaus_base(self, ip):
+    @staticmethod
+    def urlhaus_base(ip):
         base_url = "https://urlhaus-api.abuse.ch/v1/host/"
         resp = requests.post(base_url, data={"host": ip})
 
@@ -373,7 +382,8 @@ class DNSBL(object):
         self.threads = threads
         self.COUNT = 0
 
-    def update_dnsbl(self):
+    @staticmethod
+    def update_dnsbl():
         url = 'http://multirbl.valli.org/list/'
         page = requests.get(url).text
         soup = BeautifulSoup(page, 'html.parser')
@@ -406,7 +416,8 @@ class DNSBL(object):
         else:
             return False
 
-    def resolve_dns(self, qry):
+    @staticmethod
+    def resolve_dns(qry):
         try:
             resolver = dns.resolver.Resolver()
             resolver.timeout = 3
@@ -503,7 +514,7 @@ def main():
         p.print_help()
         p.exit()
 
-    if not Path('utils/blacklist.json').is_file():
+    if not BLACKLIST.exists():
         print(f"{tc.YELLOW}Blacklist file is missing...{tc.RESET}\n")
         pbl.update_list()
 
