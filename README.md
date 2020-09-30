@@ -37,7 +37,7 @@ optional arguments:
   -r remove             Remove Blacklist feed
   ```
 #### Example Run
-  ![alt text](blacklist_check.gif)
+  ![alt text](images/blacklist_check.gif)
 
 ### Update Blacklisted IPs from feeds
 
