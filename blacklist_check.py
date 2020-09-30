@@ -54,7 +54,6 @@ coloredlogs.install(level='DEBUG', logger=logger, fmt='%(message)s',
 
 
 class ProcessBL():
-
     @staticmethod
     def headers():
         ua_list = [
@@ -134,7 +133,7 @@ class ProcessBL():
             for name, url in self.read_list():
                 logger.success(f"  {tc.PROCESSING} {name:20}")
                 bl_dict["BLACKLIST"][name] = self.get_list(url)  # nopep8
-
+  
             # Remove duplicate IP addresses and update
             for name in bl_dict["BLACKLIST"]:
                 try:
@@ -463,9 +462,7 @@ class DNSBL(object):
         dnsbl = [url for url in data['DNS Blacklists']['DNSBL']]
 
         with ThreadPoolExecutor(max_workers=threads) as executor:
-            dnsbl_map = {
-                executor.submit(self.dnsbl_query, url): url for url in dnsbl
-            }
+            dnsbl_map = {executor.submit(self.dnsbl_query, url): url for url in dnsbl}  #nopep8
             for future in as_completed(dnsbl_map):
                 try:
                     future.result()
