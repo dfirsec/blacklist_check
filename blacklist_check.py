@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import os
 import platform
@@ -17,6 +16,7 @@ from pathlib import Path
 import coloredlogs
 import dns.resolver
 import requests
+import ujson as json
 import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
@@ -25,7 +25,7 @@ from ipwhois import IPWhois, exceptions
 from utils.termcolors import Termcolor as tc
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "0.0.6"
+__version__ = "v0.0.7"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -133,7 +133,7 @@ class ProcessBL():
             for name, url in self.read_list():
                 logger.success(f"  {tc.PROCESSING} {name:20}")
                 bl_dict["BLACKLIST"][name] = self.get_list(url)  # nopep8
-  
+
             # Remove duplicate IP addresses and update
             for name in bl_dict["BLACKLIST"]:
                 try:
@@ -462,7 +462,7 @@ class DNSBL(object):
         dnsbl = [url for url in data['DNS Blacklists']['DNSBL']]
 
         with ThreadPoolExecutor(max_workers=threads) as executor:
-            dnsbl_map = {executor.submit(self.dnsbl_query, url): url for url in dnsbl}  #nopep8
+            dnsbl_map = {executor.submit(self.dnsbl_query, url): url for url in dnsbl}  # nopep8
             for future in as_completed(dnsbl_map):
                 try:
                     future.result()
@@ -481,14 +481,14 @@ def parser():
                         default=25, help="threads for rbl check (default 25, max 50)")
     parser.add_argument('-w', dest='whois', action='store_true',
                         help="perform ip whois lookup")
-    
+
     group1.add_argument('-u', dest='update', action='store_true',
                         help="update blacklist feeds")
     group1.add_argument('-fu', dest='force', action='store_true',
                         help="force update of all feeds")
     group1.add_argument('-s', dest='show', action='store_true',
                         help="list blacklist feeds")
-    
+
     group2.add_argument('-q', dest='query', nargs='+', metavar='query',
                         help="query a single or multiple ip addrs")
     group2.add_argument('-f', dest='file', metavar='file',
@@ -609,8 +609,17 @@ if __name__ == "__main__":
       / __  / / __ `/ ___/ //_/ / / ___/ __/  / /   / __ \/ _ \/ ___/ //_/
      / /_/ / / /_/ / /__/ ,< / / (__  ) /_   / /___/ / / /  __/ /__/ ,<   
     /_____/_/\__,_/\___/_/|_/_/_/____/\__/   \____/_/ /_/\___/\___/_/|_|
-     v{__version__}
+                                                                {__version__}
     '''
 
     print(f"{tc.CYAN}{banner}{tc.RESET}")
+
+    # check if new version is available
+    try:
+        latest = requests.get(f"https://api.github.com/repos/dfirsec/{BASE_DIR.stem}/releases/latest").json()["tag_name"]  # nopep8
+        if latest != __version__:
+            print(f"{tc.YELLOW}* Release {latest} of {BASE_DIR.stem} is available{tc.RESET}")  # nopep8
+    except Exception as err:
+        print(f"{tc.ERROR}[Error]{tc.RESET} {err}\n")
+
     main()

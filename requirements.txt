@@ -4,4 +4,5 @@ coloredlogs==14.0
 ipwhois==1.1.0
 lxml==4.5.2
 requests==2.24.0
+ujson==3.2.0
 verboselogs==1.7
