@@ -15,17 +15,21 @@ from pathlib import Path
 
 import coloredlogs
 import dns.resolver
+import httpx
 import requests
+import trio
 import ujson as json
 import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
+from requests.exceptions import (ConnectionError, HTTPError, RequestException,
+                                 Timeout)
 
 from utils.termcolors import Termcolor as tc
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.0.7"
+__version__ = "v0.0.8"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -36,10 +40,10 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 urllib3.disable_warnings()
 
 # Base directory
-BASE_DIR = Path(__file__).resolve().parent
-BLACKLIST = BASE_DIR.joinpath('utils/blacklist.json')
-SCANNERS = BASE_DIR.joinpath('utils/scanners.json')
-FEEDS = BASE_DIR.joinpath('utils/feeds.json')
+PARENT = Path(__file__).resolve().parent
+BLACKLIST = PARENT.joinpath('utils/blacklist.json')
+SCANNERS = PARENT.joinpath('utils/scanners.json')
+FEEDS = PARENT.joinpath('utils/feeds.json')
 
 logger = verboselogs.VerboseLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -78,21 +82,25 @@ class ProcessBL():
         else:
             os.system('clear')
 
+    @staticmethod
+    async def fetch(url):
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(url)
+            return resp.text
+
     def get_list(self, url):
-        # Exclude IP if 1st and last octet are zero
         ipv4 = re.compile(r"(?![0])\d{1,}\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
         try:
-            resp = requests.get(url, timeout=5, headers=self.headers(), verify=False)  # nopep8
-            resp.encoding = 'utf-8'
-            if resp.status_code == 200:
-                return [x.group() for x in re.finditer(ipv4, resp.text)]
-        except requests.exceptions.Timeout:
+            results = trio.run(self.fetch, url)
+            ip = [ip.group() for ip in re.finditer(ipv4, results)]
+            return ip
+        except Timeout:
             print(f"    {tc.DOWNLOAD_ERR} {tc.GRAY}{url}{tc.RESET}")  # nopep8
-        except requests.exceptions.HTTPError as err:
+        except HTTPError as err:
             print(f"    {tc.DOWNLOAD_ERR} {tc.ERROR} {tc.GRAY}{err}{tc.RESET}")  # nopep8
-        except requests.exceptions.ConnectionError as err:
+        except ConnectionError as err:
             print(f"    {tc.DOWNLOAD_ERR} {tc.ERROR} {tc.GRAY}{err}{tc.RESET}")  # nopep8
-        except requests.exceptions.RequestException as err:
+        except RequestException as err:
             print(f"    {tc.DOWNLOAD_ERR} {tc.ERROR} {tc.GRAY}{err}{tc.RESET}")  # nopep8
 
     @staticmethod
@@ -339,8 +347,7 @@ class ProcessBL():
 
         detection = soup.title.get_text()
         if "No abuse detected" not in detection:
-            print('. '.join(metadata["content"].split(
-                '. ')[0:2]).split("IP-46.com", 1)[0])
+            print('. '.join(metadata["content"].split('. ')[0:2]).split("IP-46.com", 1)[0])  # nopep8
             return detection
         else:
             print(tc.CLEAN)
@@ -464,10 +471,11 @@ class DNSBL(object):
         with ThreadPoolExecutor(max_workers=threads) as executor:
             dnsbl_map = {executor.submit(self.dnsbl_query, url): url for url in dnsbl}  # nopep8
             for future in as_completed(dnsbl_map):
+                url = dnsbl_map[future]
                 try:
                     future.result()
                 except Exception as exc:
-                    print(f"Exception generated: {exc}")  # nopep8
+                    print(f"Exception generated: {url} {exc}")  # nopep8
             if self.COUNT:
                 host = str(''.join(self.host))
                 logger.warning(f"\n[*] {host} is listed in {self.COUNT} block lists")  # nopep8
@@ -616,9 +624,9 @@ if __name__ == "__main__":
 
     # check if new version is available
     try:
-        latest = requests.get(f"https://api.github.com/repos/dfirsec/{BASE_DIR.stem}/releases/latest").json()["tag_name"]  # nopep8
+        latest = requests.get(f"https://api.github.com/repos/dfirsec/{PARENT.stem}/releases/latest").json()["tag_name"]  # nopep8
         if latest != __version__:
-            print(f"{tc.YELLOW}* Release {latest} of {BASE_DIR.stem} is available{tc.RESET}")  # nopep8
+            print(f"{tc.YELLOW}* Release {latest} of {PARENT.stem} is available{tc.RESET}")  # nopep8
     except Exception as err:
         print(f"{tc.ERROR}[Error]{tc.RESET} {err}\n")
 
