@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import os
 import platform
@@ -14,22 +15,17 @@ from ipaddress import IPv4Address, ip_address
 from pathlib import Path
 
 import coloredlogs
-import dns.resolver
-import httpx
 import requests
-import trio
-import ujson as json
 import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
-from requests.exceptions import (ConnectionError, HTTPError, RequestException,
-                                 Timeout)
 
+import dns.resolver
 from utils.termcolors import Termcolor as tc
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.0.8"
+__version__ = "0.0.5"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -40,10 +36,10 @@ warnings.filterwarnings('ignore', category=DeprecationWarning)
 urllib3.disable_warnings()
 
 # Base directory
-PARENT = Path(__file__).resolve().parent
-BLACKLIST = PARENT.joinpath('utils/blacklist.json')
-SCANNERS = PARENT.joinpath('utils/scanners.json')
-FEEDS = PARENT.joinpath('utils/feeds.json')
+BASE_DIR = Path(__file__).resolve().parent
+BLACKLIST = BASE_DIR.joinpath('utils/blacklist.json')
+SCANNERS = BASE_DIR.joinpath('utils/scanners.json')
+FEEDS = BASE_DIR.joinpath('utils/feeds.json')
 
 logger = verboselogs.VerboseLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -58,8 +54,10 @@ coloredlogs.install(level='DEBUG', logger=logger, fmt='%(message)s',
 
 
 class ProcessBL():
-    @staticmethod
-    def headers():
+    def __init__(self):
+        pass
+
+    def headers(self):
         ua_list = [
             "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.38 Safari/537.36",
@@ -75,42 +73,35 @@ class ProcessBL():
         use_headers = {'user-agent': random.choice(ua_list)}
         return use_headers
 
-    @staticmethod
-    def clr_scrn():
+    def clr_scrn(self):
         if platform.system() == 'Windows':
             os.system('cls')
         else:
             os.system('clear')
 
-    @staticmethod
-    async def fetch(url):
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(url)
-            return resp.text
-
     def get_list(self, url):
+        # Exclude IP if 1st and last octet are zero
         ipv4 = re.compile(r"(?![0])\d{1,}\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
         try:
-            results = trio.run(self.fetch, url)
-            ip = [ip.group() for ip in re.finditer(ipv4, results)]
-            return ip
-        except Timeout:
+            resp = requests.get(url, timeout=5, headers=self.headers(), verify=False)  # nopep8
+            resp.encoding = 'utf-8'
+            if resp.status_code == 200:
+                return [x.group() for x in re.finditer(ipv4, resp.text)]
+        except requests.exceptions.Timeout:
             print(f"    {tc.DOWNLOAD_ERR} {tc.GRAY}{url}{tc.RESET}")  # nopep8
-        except HTTPError as err:
+        except requests.exceptions.HTTPError as err:
             print(f"    {tc.DOWNLOAD_ERR} {tc.ERROR} {tc.GRAY}{err}{tc.RESET}")  # nopep8
-        except ConnectionError as err:
+        except requests.exceptions.ConnectionError as err:
             print(f"    {tc.DOWNLOAD_ERR} {tc.ERROR} {tc.GRAY}{err}{tc.RESET}")  # nopep8
-        except RequestException as err:
+        except requests.exceptions.RequestException as err:
             print(f"    {tc.DOWNLOAD_ERR} {tc.ERROR} {tc.GRAY}{err}{tc.RESET}")  # nopep8
 
-    @staticmethod
-    def read_list():
+    def read_list(self):
         with open(FEEDS) as json_file:
             data = json.load(json_file)
             return [[name, url] for name, url in data['Blacklist Feeds'].items()]
 
-    @staticmethod
-    def sort_list(data):
+    def sort_list(self, data):
         sort_name = sorted((name, ip_cnt) for (name, ip_cnt) in data["BLACKLIST"].items())  # nopep8
         for n, i in enumerate(sort_name, start=1):
             try:
@@ -182,8 +173,7 @@ class ProcessBL():
 
             print(f"{tc.SUCCESS} {tc.YELLOW}{len(bl_list[feed]):,}{tc.RESET} IPs added to '{feed}'")  # nopep8
 
-    @staticmethod
-    def remove_feed():
+    def remove_feed(self):
         with open(FEEDS) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict['Blacklist Feeds']
@@ -284,13 +274,11 @@ class ProcessBL():
                     print(f"\n{tc.CLEAN}{tc.RESET} [{ip}]")
                     print(f"{tc.BOLD}{'   Location:':10} {tc.RESET}{self.geo_locate(ip)}\n")  # nopep8
 
-    @staticmethod
-    def modified_date(_file):
+    def modified_date(self, _file):
         lastmod = os.stat(_file).st_mtime
         return datetime.strptime(time.ctime(lastmod), "%a %b %d %H:%M:%S %Y")
 
-    @staticmethod
-    def geo_locate(ip):
+    def geo_locate(self, ip):
         try:
             url = f'https://freegeoip.live/json/{ip}'
             resp = requests.get(url)
@@ -311,8 +299,7 @@ class ProcessBL():
         except Exception as err:
             print(f"[error] {err}\n")
 
-    @staticmethod
-    def whois_ip(ip):
+    def whois_ip(self, ip):
         try:
             # ref: https://ipwhois.readthedocs.io/en/latest/RDAP.html
             obj = IPWhois(ip)
@@ -325,8 +312,7 @@ class ProcessBL():
         except Exception as err:
             return err
 
-    @staticmethod
-    def outdated():
+    def outdated(self):
         # Check if blacklist is outdated
         try:
             file_time = os.path.getmtime(BLACKLIST)
@@ -337,8 +323,7 @@ class ProcessBL():
         else:
             return False
 
-    @staticmethod
-    def ip46_qry(ip):
+    def ip46_qry(self, ip):
         ip = ''.join(ip)
         url = f'https://ip-46.com/{ip}'
         r = requests.get(url)
@@ -347,13 +332,13 @@ class ProcessBL():
 
         detection = soup.title.get_text()
         if "No abuse detected" not in detection:
-            print('. '.join(metadata["content"].split('. ')[0:2]).split("IP-46.com", 1)[0])  # nopep8
+            print('. '.join(metadata["content"].split(
+                '. ')[0:2]).split("IP-46.com", 1)[0])
             return detection
         else:
             print(tc.CLEAN)
 
-    @staticmethod
-    def urlhaus_base(ip):
+    def urlhaus_base(self, ip):
         base_url = "https://urlhaus-api.abuse.ch/v1/host/"
         resp = requests.post(base_url, data={"host": ip})
 
@@ -388,8 +373,7 @@ class DNSBL(object):
         self.threads = threads
         self.COUNT = 0
 
-    @staticmethod
-    def update_dnsbl():
+    def update_dnsbl(self):
         url = 'http://multirbl.valli.org/list/'
         page = requests.get(url).text
         soup = BeautifulSoup(page, 'html.parser')
@@ -422,8 +406,7 @@ class DNSBL(object):
         else:
             return False
 
-    @staticmethod
-    def resolve_dns(qry):
+    def resolve_dns(self, qry):
         try:
             resolver = dns.resolver.Resolver()
             resolver.timeout = 3
@@ -469,36 +452,35 @@ class DNSBL(object):
         dnsbl = [url for url in data['DNS Blacklists']['DNSBL']]
 
         with ThreadPoolExecutor(max_workers=threads) as executor:
-            dnsbl_map = {executor.submit(self.dnsbl_query, url): url for url in dnsbl}  # nopep8
+            dnsbl_map = {
+                executor.submit(self.dnsbl_query, url): url for url in dnsbl
+            }
             for future in as_completed(dnsbl_map):
-                url = dnsbl_map[future]
                 try:
                     future.result()
                 except Exception as exc:
-                    print(f"Exception generated: {url} {exc}")  # nopep8
+                    print(f"Exception generated: {exc}")  # nopep8
             if self.COUNT:
                 host = str(''.join(self.host))
                 logger.warning(f"\n[*] {host} is listed in {self.COUNT} block lists")  # nopep8
 
 
 def parser():
-    parser = argparse.ArgumentParser(description="IP Blacklist Check")
-    group1 = parser.add_mutually_exclusive_group()
-    group2 = parser.add_mutually_exclusive_group()
-    parser.add_argument('-t', dest='threads', nargs='?', type=int, metavar='threads',
-                        default=25, help="threads for rbl check (default 25, max 50)")
-    parser.add_argument('-w', dest='whois', action='store_true',
-                        help="perform ip whois lookup")
-
+    p = argparse.ArgumentParser(description="IP Blacklist Check")
+    group1 = p.add_mutually_exclusive_group()
+    group2 = p.add_mutually_exclusive_group()
     group1.add_argument('-u', dest='update', action='store_true',
                         help="update blacklist feeds")
     group1.add_argument('-fu', dest='force', action='store_true',
                         help="force update of all feeds")
     group1.add_argument('-s', dest='show', action='store_true',
                         help="list blacklist feeds")
-
     group2.add_argument('-q', dest='query', nargs='+', metavar='query',
                         help="query a single or multiple ip addrs")
+    p.add_argument('-t', dest='threads', nargs='?', type=int, metavar='threads',
+                   default=25, help="threads for rbl check (default 25, max 50)")
+    p.add_argument('-w', dest='whois', action='store_true',
+                   help="perform ip whois lookup")
     group2.add_argument('-f', dest='file', metavar='file',
                         help="query a list of ip addresses from file")
     group2.add_argument('-i', dest='insert', action='store_true',
@@ -506,7 +488,7 @@ def parser():
     group2.add_argument('-r', dest='remove', action='store_true',
                         help='remove an existing blacklist feed')
 
-    return parser
+    return p
 
 
 def main():
@@ -521,7 +503,7 @@ def main():
         p.print_help()
         p.exit()
 
-    if not BLACKLIST.exists():
+    if not Path('utils/blacklist.json').is_file():
         print(f"{tc.YELLOW}Blacklist file is missing...{tc.RESET}\n")
         pbl.update_list()
 
@@ -617,17 +599,8 @@ if __name__ == "__main__":
       / __  / / __ `/ ___/ //_/ / / ___/ __/  / /   / __ \/ _ \/ ___/ //_/
      / /_/ / / /_/ / /__/ ,< / / (__  ) /_   / /___/ / / /  __/ /__/ ,<   
     /_____/_/\__,_/\___/_/|_/_/_/____/\__/   \____/_/ /_/\___/\___/_/|_|
-                                                                {__version__}
+     v{__version__}
     '''
 
     print(f"{tc.CYAN}{banner}{tc.RESET}")
-
-    # check if new version is available
-    try:
-        latest = requests.get(f"https://api.github.com/repos/dfirsec/{PARENT.stem}/releases/latest").json()["tag_name"]  # nopep8
-        if latest != __version__:
-            print(f"{tc.YELLOW}* Release {latest} of {PARENT.stem} is available{tc.RESET}")  # nopep8
-    except Exception as err:
-        print(f"{tc.ERROR}[Error]{tc.RESET} {err}\n")
-
     main()
