@@ -219,16 +219,6 @@ class ProcessBL():
         found = []
         global name
 
-        # try:
-        #     with open(BLACKLIST) as json_file:
-        #         ip_list = json.load((json_file))
-
-        #     with open(SCANNERS) as json_file:
-        #         scanner_list = json.load((json_file))
-
-        # except Exception as err:
-        #     print(err)
-
         # Compare and find blacklist matches
         with open(BLACKLIST) as json_file:
             ip_list = json.load((json_file))
