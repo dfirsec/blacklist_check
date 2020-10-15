@@ -16,7 +16,7 @@ class Termcolor:
     rst = Fore.RESET
 
     # unicode symbols
-    processing = f"{cyan}\u279C{rst}"
+    processing = f"{cyan}>{rst}"
     success = f"{green}\u2714{rst}"
     warning = f"{yellow}\u03DF{rst}"
     error = f"{red}\u2718{rst}"
