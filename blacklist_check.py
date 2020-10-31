@@ -93,11 +93,11 @@ class ProcessBL():
                 resp.raise_for_status()
                 return resp.text
             except httpx.TimeoutException:
-                print(f"  {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
+                print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
             except httpx.RequestError:
-                print(f"  {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
+                print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
             except httpx.HTTPStatusError:
-                print(f"  {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
+                print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
 
     def get_feeds(self, feed):
         ipv4 = re.compile(r"(?![0])\d+\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
