@@ -18,7 +18,6 @@
         "MalC0de Blacklist": "http://malc0de.com/bl/IP_Blacklist.txt",
         "Malware Army": "https://malware.army/api/honey_iplist",
         "Malware Domains": "http://www.malwaredomainlist.com/hostslist/ip.txt",
-        "Mirai Security": "https://mirai.security.gives/data/ip_list.txt",
         "MyIP Blacklist": "https://www.myip.ms/files/blacklist/csf/latest_blacklist.txt",
         "OpenPhish": "https://openphish.com/feed.txt",
         "PhishTank": "http://data.phishtank.com/data/online-valid.csv",

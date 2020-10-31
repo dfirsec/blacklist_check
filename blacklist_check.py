@@ -23,13 +23,11 @@ import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
-from requests.exceptions import (ConnectionError, HTTPError, RequestException,
-                                 Timeout)
 
 from utils.termcolors import Termcolor as Tc
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.0.9"
+__version__ = "v0.1.0"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -90,23 +88,25 @@ class ProcessBL():
 
     async def fetch(self, url):
         async with httpx.AsyncClient(verify=False) as client:
-            resp = await client.get(url, timeout=5.0, headers=self.headers())
-            return resp.text
+            try:
+                resp = await client.get(url, timeout=10.0, headers=self.headers())
+                resp.raise_for_status()
+                return resp.text
+            except httpx.TimeoutException:
+                print(f"  {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
+            except httpx.RequestError:
+                print(f"  {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
+            except httpx.HTTPStatusError:
+                print(f"  {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
 
-    def get_list(self, url):
+    def get_feeds(self, feed):
         ipv4 = re.compile(r"(?![0])\d+\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
+        results = trio.run(self.fetch, feed)
         try:
-            results = trio.run(self.fetch, url)
             ip = [ip.group() for ip in re.finditer(ipv4, results)]
             return ip
-        except Timeout:
-            print(f"    {Tc.dl_error} {Tc.gray}{url}{Tc.rst}")  # nopep8
-        except HTTPError as err:
-            print(f"    {Tc.dl_error} {Tc.error} {Tc.gray}{err}{Tc.rst}")  # nopep8
-        except ConnectionError as err:
-            print(f"    {Tc.dl_error} {Tc.error} {Tc.gray}{err}{Tc.rst}")  # nopep8
-        except RequestException as err:
-            print(f"    {Tc.dl_error} {Tc.error} {Tc.gray}{err}{Tc.rst}")  # nopep8
+        except TypeError:
+            pass
 
     @staticmethod
     def read_list():
@@ -145,7 +145,7 @@ class ProcessBL():
             bl_dict['Blacklists'] = {}
             for name, url in self.read_list():
                 logger.success(f"  {Tc.processing} {name:20}")
-                bl_dict['Blacklists'][name] = self.get_list(url)  # nopep8
+                bl_dict['Blacklists'][name] = self.get_feeds(url)  # nopep8
 
             # Remove duplicate IP addresses and update
             for name in bl_dict['Blacklists']:
@@ -179,7 +179,7 @@ class ProcessBL():
                 bl_dict = json.load(json_file)
                 bl_list = bl_dict['Blacklists']
 
-            bl_list.update({feed: self.get_list(url)})
+            bl_list.update({feed: self.get_feeds(url)})
             with open(blklist, 'w') as json_file:
                 json.dump(bl_dict, json_file,
                           ensure_ascii=False,
@@ -624,6 +624,11 @@ if __name__ == "__main__":
     '''
 
     print(f"{Tc.cyan}{banner}{Tc.rst}")
+
+    # check if python version
+    if not sys.version_info.major == 3 and sys.version_info.minor >= 8:
+        print("Python 3.8 or higher is required.")
+        sys.exit(f"You are using Python {sys.version_info.major}.{sys.version_info.minor}")  # nopep8
 
     # check if new version is available
     try:
