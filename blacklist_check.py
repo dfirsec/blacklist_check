@@ -27,7 +27,7 @@ from ipwhois import IPWhois, exceptions
 from utils.termcolors import Termcolor as Tc
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.1.0"
+__version__ = "v0.1.1"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
