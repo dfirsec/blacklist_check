@@ -508,7 +508,7 @@ def parser():
     group1.add_argument('-fu', dest='force', action='store_true',
                         help="force update of all feeds")
     group1.add_argument('-s', dest='show', action='store_true',
-                        help="list blacklist feeds")
+                        help="show blacklist feeds")
 
     group2.add_argument('-q', dest='query', nargs='+', metavar='query',
                         help="query a single or multiple ip addrs")
