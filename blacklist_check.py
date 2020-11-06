@@ -101,8 +101,8 @@ class ProcessBL():
 
     def get_feeds(self, feed):
         ipv4 = re.compile(r"(?![0])\d+\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
-        results = trio.run(self.fetch, feed)
         try:
+            results = trio.run(self.fetch, feed)
             ip = [ip.group() for ip in re.finditer(ipv4, results)]
             return ip
         except TypeError:
@@ -110,6 +110,7 @@ class ProcessBL():
 
     @staticmethod
     def read_list():
+        """ Returns the name and url for each feed """
         with open(feeds) as json_file:
             data = json.load(json_file)
             return [[name, url] for name, url in data['Blacklist Feeds'].items()]
@@ -126,6 +127,7 @@ class ProcessBL():
                 continue
 
     def list_count(self):
+        """ Returns a count of IP addresses for each feed """
         try:
             with open(blklist) as json_file:
                 data = json.load(json_file)
@@ -139,6 +141,7 @@ class ProcessBL():
             self.outdated()
 
     def update_list(self):
+        """ Updates the feed list with latest IP addresses """
         bl_dict = dict()
         print(f"{Tc.green}[ Updating ]{Tc.rst}")
         with open(blklist, 'w') as json_file:
@@ -160,6 +163,7 @@ class ProcessBL():
                       indent=4)
 
     def add_feed(self, feed, url):
+        """ Manually add feed """
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict['Blacklist Feeds']
@@ -189,6 +193,7 @@ class ProcessBL():
 
     @staticmethod
     def remove_feed():
+        """ Remove a feed item """
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict['Blacklist Feeds']
@@ -288,11 +293,13 @@ class ProcessBL():
 
     @staticmethod
     def modified_date(_file):
+        """ Returns the last modified date, or last download """
         lastmod = os.stat(_file).st_mtime
         return datetime.strptime(time.ctime(lastmod), "%a %b %d %H:%M:%S %Y")
 
     @staticmethod
     def geo_locate(ip_addr):
+        """ Returns IP address geolocation """
         try:
             url = f'https://freegeoip.live/json/{ip_addr}'
             resp = requests.get(url)
@@ -315,6 +322,7 @@ class ProcessBL():
 
     @staticmethod
     def whois_ip(ip_addr):
+        """ Returns IP address whois information """
         try:
             # ref: https://ipwhois.readthedocs.io/en/latest/RDAP.html
             obj = IPWhois(ip_addr)
@@ -329,7 +337,7 @@ class ProcessBL():
 
     @staticmethod
     def outdated():
-        # Check if blacklist is outdated
+        """ Checks if feed list is outdated (within last 24 hours) """
         try:
             file_time = os.path.getmtime(blklist)
             if (time.time() - file_time) / 3600 > 24:
@@ -446,11 +454,14 @@ class DNSBL(object):
         host = str(''.join(self.host))
 
         # Return Codes
-        codes = ['0.0.0.1', '127.0.0.1', '127.0.0.2', '127.0.0.3',
-                 '127.0.0.4', '127.0.0.5', '127.0.0.6', '127.0.0.7',
-                 '127.0.0.9', '127.0.1.4', '127.0.1.5', '127.0.1.6',
-                 '127.0.0.10', '127.0.0.11', '127.0.0.39', '127.0.1.103',
-                 '127.0.1.104', '127.0.1.105', '127.0.1.106', '127.0.1.108']
+        codes = ['0.0.0.1', '127.0.0.1', '127.0.0.2',
+                 '127.0.0.3', '127.0.0.4', '127.0.0.5',
+                 '127.0.0.6', '127.0.0.7', '127.0.0.9',
+                 '127.0.0.10', '127.0.0.11', '127.0.0.39',
+                 '127.0.0.45', '127.0.1.4', '127.0.1.5',
+                 '127.0.1.6', '127.0.1.20', '127.0.1.103',
+                 '127.0.1.104', '127.0.1.105', '127.0.1.106',
+                 '127.0.1.108', '10.0.2.3']
 
         try:
             qry = ip_address(host).reverse_pointer.replace('.in-addr.arpa', '') + "." + blacklist  # nopep8
