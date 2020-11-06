@@ -255,6 +255,7 @@ class ProcessBL():
                 continue
 
         # Compare and find scanner matches
+        # ref: https://wiki.ipfire.org/configuration/firewall/blockshodan
         with open(scnrs) as json_file:
             scanner_list = json.load(json_file)
 
