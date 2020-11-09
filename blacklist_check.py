@@ -105,7 +105,7 @@ class ProcessBL():
             results = trio.run(self.fetch, feed)
             ip = [ip.group() for ip in re.finditer(ipv4, results)]
             return ip
-        except TypeError:
+        except (TypeError, OSError):
             pass
 
     @staticmethod
