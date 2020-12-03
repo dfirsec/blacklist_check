@@ -374,8 +374,7 @@ class VirusTotalChk():
         self.api_key = api_key
         self.base_url = f'https://www.virustotal.com/vtapi/v2/ip-address/report?apikey='
         if self.api_key is None:
-            sys.exit(
-                f"{Tc.yellow}* Verify that you have provided your API key{Tc.rst}")
+            sys.exit(f"{Tc.yellow}* Verify that you have provided your API key{Tc.rst}")  # nopep8
 
     # ---[ VirusTotal Connection ]---
     @staticmethod
@@ -410,8 +409,7 @@ class VirusTotalChk():
                     print(f"{Tc.red}>{Tc.rst} {k['sha256']}")
                     print(f"  Positives: {k['positives']}")
                     print(f"  Date: {k['date']}\n")
-
-        else:
+        elif json_resp['response_code'] == 0:
             print(Tc.clean)
 
 
@@ -606,12 +604,12 @@ def main():
 
                         with open(settings, 'w') as output:
                             yaml.dump(config, output)
-
-                        api_key = config['VIRUS-TOTAL']['api_key']
-                        virustotal = VirusTotalChk(api_key)
-                        virustotal.vt_run(ip_addrs)
                     except KeyboardInterrupt:
                         sys.exit("Exited")
+                else:
+                    api_key = config['VIRUS-TOTAL']['api_key']
+                    virustotal = VirusTotalChk(api_key)
+                    virustotal.vt_run(ip_addrs)
 
     if args.file:
         pbl.outdated()
