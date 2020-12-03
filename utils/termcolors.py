@@ -10,6 +10,7 @@ class Termcolor:
     cyan = Fore.CYAN
     green = Fore.GREEN
     gray = Fore.LIGHTBLACK_EX
+    mag = Fore.LIGHTMAGENTA_EX
     yellow = Fore.YELLOW
     red = Fore.LIGHTRED_EX
     italic = "\x1b[3m"

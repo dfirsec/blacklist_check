@@ -11,6 +11,7 @@ import urllib
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
+from http.client import responses
 from ipaddress import IPv4Address, ip_address
 from pathlib import Path
 
@@ -23,11 +24,12 @@ import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
+from ruamel.yaml import YAML
 
 from utils.termcolors import Termcolor as Tc
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.1.1"
+__version__ = "v0.1.2"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -42,6 +44,7 @@ parent = Path(__file__).resolve().parent
 blklist = parent.joinpath('utils/blacklist.json')
 scnrs = parent.joinpath('utils/scanners.json')
 feeds = parent.joinpath('utils/feeds.json')
+settings = parent.joinpath('utils/settings.yml')
 
 logger = verboselogs.VerboseLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -228,69 +231,42 @@ class ProcessBL():
 
     def ip_matches(self, ip_addrs, whois=None):
         found = []
-        global name, ip
+
+        def worker(json_list, list_name, list_type):
+            global name, ip
+            with open(json_list) as json_file:
+                ip_list = json.load(json_file)
+
+            for name, item in ip_list[list_name].items():
+                try:
+                    matches = set(ip_addrs) & set(item)
+                    for ip in matches:
+                        print(f"\n{list_type} [{ip}] > {Tc.yellow}{name}{Tc.rst}")  # nopep8
+                        print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")  # nopep8
+                        if whois:
+                            print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}\n")  # nopep8
+                        if ip not in found:
+                            found.append(ip)
+                except ValueError:
+                    print(f"{Tc.warning} {'INVALID IP':12} {ip}")
+                except TypeError:
+                    continue
 
         # Compare and find blacklist matches
-        with open(blklist) as json_file:
-            ip_list = json.load(json_file)
-
-        for name, bl_ip in ip_list['Blacklists'].items():
-            try:
-                matches = set(ip_addrs) & set(bl_ip)
-                for ip in matches:
-                    if whois:
-                        print(f"\n{Tc.blacklisted} [{ip}] > {Tc.yellow}{name}{Tc.rst}")  # nopep8
-                        print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")  # nopep8
-                        print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}\n")  # nopep8
-                        if ip not in found:
-                            found.append(ip)
-                    else:
-                        print(f"\n{Tc.blacklisted} [{ip}] > {Tc.yellow}{name}{Tc.rst}")  # nopep8
-                        print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}\n")  # nopep8
-                        if ip not in found:
-                            found.append(ip)
-            except ValueError:
-                print(f"{Tc.warning} {'INVALID IP':12} {ip}")
-            except TypeError:
-                continue
+        worker(blklist, 'Blacklists', Tc.blacklisted)
 
         # Compare and find scanner matches
         # ref: https://wiki.ipfire.org/configuration/firewall/blockshodan
-        with open(scnrs) as json_file:
-            scanner_list = json.load(json_file)
+        worker(scnrs, 'Scanners', Tc.scanner)
 
-        for name, sc_ip in scanner_list['Scanners'].items():
-            try:
-                matches = set(ip_addrs) & set(sc_ip)
-                for ip in matches:
-                    if whois:
-                        print(f"\n{Tc.scanner} [{ip}] > {Tc.yellow}{name}{Tc.rst}")  # nopep8
-                        print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")  # nopep8
-                        print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}\n")  # nopep8
-                        if ip not in found:
-                            found.append(ip)
-                    else:
-                        print(
-                            f"\n{Tc.scanner} [{ip}] > {Tc.yellow}{name}{Tc.rst}")
-                        print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}\n")  # nopep8
-                        if ip not in found:
-                            found.append(ip)
-            except ValueError:
-                print(f"{Tc.warning} {'INVALID IP':12} {ip}")
-            except TypeError:
-                continue
-
-        # not blacklisted
+        # if not blacklisted
         nomatch = [ip for ip in ip_addrs if ip not in found]
         if nomatch:
             for ip in nomatch:
+                print(f"\n{Tc.clean}{Tc.rst} [{ip}]")
+                print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")  # nopep8
                 if whois:
-                    print(f"\n{Tc.clean}{Tc.rst} [{ip}]")
-                    print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")  # nopep8
                     print(f"{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}\n")  # nopep8
-                else:
-                    print(f"\n{Tc.clean}{Tc.rst} [{ip}]")
-                    print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}\n")  # nopep8
 
     @staticmethod
     def modified_date(_file):
@@ -393,7 +369,53 @@ class ProcessBL():
                             print("\n")
 
 
-class DNSBL(object):
+class VirusTotalChk():
+    def __init__(self, api_key=None):
+        self.api_key = api_key
+        self.base_url = f'https://www.virustotal.com/vtapi/v2/ip-address/report?apikey='
+        if self.api_key is None:
+            sys.exit(
+                f"{Tc.yellow}* Verify that you have provided your API key{Tc.rst}")
+
+    # ---[ VirusTotal Connection ]---
+    @staticmethod
+    def vt_connect(url):
+        try:
+            resp = requests.get(url, timeout=5)
+            resp.encoding = 'utf-8'
+            if resp.status_code == 401:
+                sys.exit("[error] Verify that you have provided a valid API key.")  # nopep8
+            if resp.status_code != 200:
+                print(f" {Tc.error} {Tc.gray} {resp.status_code} {responses[resp.status_code]}{url}{Tc.rst}")  # nopep8
+            else:
+                return resp.json()
+        except (requests.exceptions.Timeout, requests.exceptions.HTTPError,
+                requests.exceptions.ConnectionError, requests.exceptions.RequestException):
+            print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{Tc.rst}")  # nopep8
+
+    def vt_run(self, ip_addr):
+        url = f"{self.base_url}{self.api_key}&ip={''.join(ip_addr)}"
+        data = json.dumps(self.vt_connect(url))
+        json_resp = json.loads(data)
+        if json_resp['response_code'] == 1:
+            if json_resp['detected_urls']:
+                print(f"{Tc.mag}= URLs ={Tc.rst}")
+                for k in json_resp['detected_urls']:
+                    print(f"{Tc.red}>{Tc.rst} {k['url']}")
+                    print(f"  Positives: {k['positives']}")
+                    print(f"  Scan Date: {k['scan_date']}\n")
+            if json_resp['detected_downloaded_samples']:
+                print(f"{Tc.mag}= Hashes ={Tc.rst}")
+                for k in json_resp['detected_downloaded_samples']:
+                    print(f"{Tc.red}>{Tc.rst} {k['sha256']}")
+                    print(f"  Positives: {k['positives']}")
+                    print(f"  Date: {k['date']}\n")
+
+        else:
+            print(Tc.clean)
+
+
+class DNSBL():
     def __init__(self, host, threads):
         self.host = host
         self.threads = threads
@@ -510,9 +532,12 @@ def parser():
                         help="force update of all feeds")
     group1.add_argument('-s', dest='show', action='store_true',
                         help="show blacklist feeds")
+    group1.add_argument('-vt', dest='vt_query', action='store_true',
+                        help="check virustotal for ip info")
 
     group2.add_argument('-q', dest='query', nargs='+', metavar='query',
                         help="query a single or multiple ip addrs")
+
     group2.add_argument('-f', dest='file', metavar='file',
                         help="query a list of ip addresses from file")
     group2.add_argument('-i', dest='insert', action='store_true',
@@ -563,6 +588,30 @@ def main():
 
             print(f"\n{Tc.dotsep}\n{Tc.green}[ URLhaus Check ]{Tc.rst}")  # nopep8
             pbl.urlhaus_qry(args.query)
+
+            # VirusTotal Query
+            if args.vt_query:
+                print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")  # nopep8
+                # ---[ Configuration Parser ]---
+                yaml = YAML()
+                with open(settings) as _file:
+                    config = yaml.load(_file)
+
+                # verify vt api key
+                if not config['VIRUS-TOTAL']['api_key']:
+                    logger.warning("Please add VT API key to the 'settings.yml' file, or enter it below")  # nopep8
+                    try:
+                        user_vt_key = input("Enter key: ")
+                        config['VIRUS-TOTAL']['api_key'] = user_vt_key
+
+                        with open(settings, 'w') as output:
+                            yaml.dump(config, output)
+
+                        api_key = config['VIRUS-TOTAL']['api_key']
+                        virustotal = VirusTotalChk(api_key)
+                        virustotal.vt_run(ip_addrs)
+                    except KeyboardInterrupt:
+                        sys.exit("Exited")
 
     if args.file:
         pbl.outdated()
@@ -616,7 +665,6 @@ def main():
                     print(f"{Tc.error} URL '{url}' appears to be invalid or inaccessible.")  # nopep8
             else:
                 sys.exit(f"{Tc.error} Please include the feed name and url.")
-                break
 
     if args.remove:
         pbl.remove_feed()
@@ -644,10 +692,10 @@ if __name__ == "__main__":
 
     # check if new version is available
     try:
-        latest = requests.get(f"https://api.github.com/repos/dfirsec/{parent.stem}/releases/latest").json()["tag_name"]  # nopep8
+        latest = requests.get(f"https://api.github.com/repos/dfirsec/{parent.stem}/releases/latest").json()['tag_name']  # nopep8
         if latest != __version__:
             print(f"{Tc.yellow}* Release {latest} of {parent.stem} is available{Tc.rst}")  # nopep8
     except Exception as err:
-        print(f"{Tc.error}[Error]{Tc.rst} {err}\n")
+        print(f"{Tc.error} [Error]{Tc.rst} {err}\n")
 
     main()
