@@ -604,6 +604,10 @@ def main():
 
                         with open(settings, 'w') as output:
                             yaml.dump(config, output)
+                            
+                        api_key = config['VIRUS-TOTAL']['api_key']
+                        virustotal = VirusTotalChk(api_key)
+                        virustotal.vt_run(ip_addrs)
                     except KeyboardInterrupt:
                         sys.exit("Exited")
                 else:
