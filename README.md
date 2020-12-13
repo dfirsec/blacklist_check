@@ -21,7 +21,7 @@ pip install -r requirements.txt
      / /_/ / / /_/ / /__/ ,< / / (__  ) /_   / /___/ / / /  __/ /__/ ,<
     /_____/_/\__,_/\___/_/|_/_/_/____/\__/   \____/_/ /_/\___/\___/_/|_|
 
-usage: blacklist_check.py [-h] [-u] [-s] [-q query [query ...]] [-w] [-f file] [-i insert insert] [-r remove]
+usage: blacklist_check.py [-h] [-t [threads]] [-u | -fu | -s | -v] [-q query [query ...] | -f file | -i | -r]
 
 IP Blacklist Check
 
@@ -31,7 +31,7 @@ optional arguments:
   -u                    update blacklist feeds
   -fu                   force update of all feeds
   -s                    show blacklist feeds
-  -vt                   check virustotal for ip info
+  -v                    check virustotal for ip info
   -q query [query ...]  query a single or multiple ip addrs
   -f file               query a list of ip addresses from file
   -i                    insert a new blacklist feed
