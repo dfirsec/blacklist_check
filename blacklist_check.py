@@ -16,7 +16,7 @@ from utils.termcolors import Termcolor as Tc
 from utils.vtworker import VirusTotal
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.1.3"
+__version__ = "v0.1.4"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
