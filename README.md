@@ -2,7 +2,7 @@
 
 ![Generic badge](https://img.shields.io/badge/python-3.7-blue.svg) [![Twitter](https://img.shields.io/badge/Twitter-@pulsecode-blue.svg)](https://twitter.com/pulsecode)
 
-Python script to download blacklists from various sources and check IP addresses against those blacklists.  Utilizes the FreeGeopIP Live service for IP geolocation. (ref: <https://freegeoip.live/)>
+Python script to download blacklists from various sources and check IP addresses against those blacklists. Utilizes the FreeGeopIP Live service for IP geolocation. (ref: <https://freegeoip.live/)>
 
 ## Installation
 
@@ -29,7 +29,6 @@ IP Blacklist Check
 optional arguments:
   -h, --help            show this help message and exit
   -t [threads]          threads for rbl check (default 25, max 50)
-  -w                    perform ip whois lookup
   -u                    update blacklist feeds
   -fu                   force update of all feeds
   -s                    show blacklist feeds
@@ -38,45 +37,46 @@ optional arguments:
   -f file               query a list of ip addresses from file
   -i                    insert a new blacklist feed
   -r                    remove an existing blacklist feed
-  ```
+```
 
 #### Example Run
-  ![alt text](images/blacklist_check.gif)
+
+![alt text](images/blacklist_check.gif)
 
 ### Update Blacklisted IPs from feeds
 
-  ```text
-  python blacklist_check.py -u
+```text
+python blacklist_check.py -u
 
- [ Updating ]
-  ➜  Alien Vault Reputation
-  ➜  Bambenek Consulting
-  ➜  Bitcoin Nodes
-  ➜  Blocklist DE
-  ➜  Bot Scout IPs
-  ➜  Brute Force Blocker
-  ➜  CI Army Badguys
-  ➜  Coin Blacklist Hosts
-  ➜  CyberCrime
-  ➜  Danger Rulez
-  ➜  Darklist DE
-  ➜  ET Compromised
-  ➜  ET Tor Rules
-  ➜  IP Spamlist
-  ➜  MalC0de Blacklist
-  ➜  Malware Army
-  ➜  Malware Domains
-  ➜  Mirai Security
-  ➜  MyIP Blacklist
-  ➜  SSL Abuse IP List
-  ➜  SpamHaus Drop
-  ➜  Stop Forum Spam
-  ➜  Talos Intel
-  ➜  Threat Crowd
-  ➜  Threatweb Botnet IPs
-  ➜  Threatweb Watchlist
-  ➜  URL Haus
-  ➜  WindowsSpyBlocker
+[ Updating ]
+➜  Alien Vault Reputation
+➜  Bambenek Consulting
+➜  Bitcoin Nodes
+➜  Blocklist DE
+➜  Bot Scout IPs
+➜  Brute Force Blocker
+➜  CI Army Badguys
+➜  Coin Blacklist Hosts
+➜  CyberCrime
+➜  Danger Rulez
+➜  Darklist DE
+➜  ET Compromised
+➜  ET Tor Rules
+➜  IP Spamlist
+➜  MalC0de Blacklist
+➜  Malware Army
+➜  Malware Domains
+➜  Mirai Security
+➜  MyIP Blacklist
+➜  SSL Abuse IP List
+➜  SpamHaus Drop
+➜  Stop Forum Spam
+➜  Talos Intel
+➜  Threat Crowd
+➜  Threatweb Botnet IPs
+➜  Threatweb Watchlist
+➜  URL Haus
+➜  WindowsSpyBlocker
 ```
 
 ### Show count of Blacklisted IPs
@@ -119,6 +119,7 @@ Windows SpyBlocker       : 358
 ```
 
 ### Insert new Blacklist feed
+
 ```text
 python blacklist_check.py" -i
         ____  __           __   ___      __     ________              __
@@ -140,7 +141,9 @@ Feed url: https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/d
 ```
 
 ### Remove Blacklist feed
+
 Removes entry from both the feeds and blacklist
+
 ```
 python blacklist_check.py" -r
  1) Alien Vault Reputation   http://reputation.alienvault.com/reputation.data
@@ -185,7 +188,7 @@ Please select your choice by number: 31
 
 ```text
 python blacklist_check.py" -q 104.152.52.31
-  
+
 ✖  Blacklisted [104.152.52.31] > Alien Vault Reputation
    Location: United States (US)
 
@@ -218,57 +221,33 @@ python blacklist_check.py" -q 104.152.52.31
 
 ................................
 [ URLhaus Check ]
-✔  NOT LISTED 
+✔  NOT LISTED
 ```
 
 #### Multiple inline
 
 ```text
 python blacklist_check.py -q 5.255.250.96, 78.46.85.236, 46.229.168.146
-  
+
 ✔  NOT LISTED  [5.255.250.96]
    Location: Moscow, Russia (RU)
+   Whois:  38 Merrimac St., Suite 201, Newburyport, MA 01950
+
 
 ✔  NOT LISTED  [78.46.85.236]
    Location: Germany (DE)
+   Whois:  Hetzner Online AG
+
 
 ✔  NOT LISTED  [46.229.168.146]
    Location: Ashburn, Virginia (US)
+   Whois:  Advanced Hosters B.V.
 ```
 
 #### Multiple from file
 
 ```text
 python blacklist_check.py -f ip_list.txt
-```
-
-#### IP Whois Lookup
-
-```text
-python blacklist_check.py -q 75.62.69.12, 12.16.5.23, 87.56.25.4, 18.23.36.2 -w
-
-..............................
-[ Performing IP whois lookup ]
-
-
-✔  NOT LISTED  [75.62.69.12]
-   Location: Allen, Texas (US)
-   Whois:  AT&T Corp.
-
-
-✔  NOT LISTED  [12.16.5.23]
-   Location: United States (US)
-   Whois:  AT&T Services, Inc.
-
-
-✔  NOT LISTED  [87.56.25.4]
-   Location: Denmark (DK)
-   Whois:  TDC BB-ADSL users
-
-
-✔  NOT LISTED  [18.23.36.2]
-   Location: United States (US)
-   Whois:  Massachusetts Institute of Technology
 ```
 
 #### VirusTotal Check (requires api key)

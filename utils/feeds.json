@@ -7,7 +7,7 @@
         "Brute Force Blocker": "http://danger.rulez.sk/projects/bruteforceblocker/blist.php",
         "CI Army Badguys": "http://www.ciarmy.com/list/ci-badguys.txt",
         "Coin Blacklist Hosts": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/coinbl_hosts.ipset",
-        "CyberCrime": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/cybercrime.ipset",
+        "CyberCrime Tracker IPs": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/cybercrime.ipset",
         "Darklist DE": "https://www.darklist.de/raw.php",
         "ET Compromised": "https://rules.emergingthreats.net/blockrules/compromised-ips.txt",
         "ET Tor Rules": "https://rules.emergingthreats.net/blockrules/emerging-tor.rules",

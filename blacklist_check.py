@@ -229,7 +229,7 @@ class ProcessBL():
         except (IndexError, ValueError, KeyError):
             sys.exit(f'{Tc.error} Your selection does not exist.')
 
-    def ip_matches(self, ip_addrs, whois=None):
+    def ip_matches(self, ip_addrs):
         found = []
 
         def worker(json_list, list_name, list_type):
@@ -243,8 +243,7 @@ class ProcessBL():
                     for ip in matches:
                         print(f"\n{list_type} [{ip}] > {Tc.yellow}{name}{Tc.rst}")  # nopep8
                         print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")  # nopep8
-                        if whois:
-                            print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}\n")  # nopep8
+                        print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}\n")  # nopep8
                         if ip not in found:
                             found.append(ip)
                 except ValueError:
@@ -265,8 +264,7 @@ class ProcessBL():
             for ip in nomatch:
                 print(f"\n{Tc.clean}{Tc.rst} [{ip}]")
                 print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")  # nopep8
-                if whois:
-                    print(f"{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}\n")  # nopep8
+                print(f"{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}\n")  # nopep8
 
     @staticmethod
     def modified_date(_file):
@@ -369,7 +367,7 @@ class ProcessBL():
                             print("\n")
 
 
-class VirusTotalChk():
+class VirusTotal():
     def __init__(self, api_key=None):
         self.api_key = api_key
         self.base_url = f'https://www.virustotal.com/vtapi/v2/ip-address/report?apikey='
@@ -397,18 +395,25 @@ class VirusTotalChk():
         data = json.dumps(self.vt_connect(url))
         json_resp = json.loads(data)
         if json_resp['response_code'] == 1:
-            if json_resp['detected_urls']:
-                print(f"{Tc.mag}= URLs ={Tc.rst}")
-                for k in json_resp['detected_urls']:
-                    print(f"{Tc.red}>{Tc.rst} {k['url']}")
-                    print(f"  Positives: {k['positives']}")
-                    print(f"  Scan Date: {k['scan_date']}\n")
-            if json_resp['detected_downloaded_samples']:
-                print(f"{Tc.mag}= Hashes ={Tc.rst}")
-                for k in json_resp['detected_downloaded_samples']:
-                    print(f"{Tc.red}>{Tc.rst} {k['sha256']}")
-                    print(f"  Positives: {k['positives']}")
-                    print(f"  Date: {k['date']}\n")
+            try:
+                if json_resp['resolutions']:
+                    print(f"{Tc.mag}= Hostnames ={Tc.rst}")
+                    for k in json_resp['resolutions']:
+                        print(f"{Tc.red}>{Tc.rst} {k['hostname']} ({k['last_resolved']})")  #nopep8
+                if json_resp['detected_urls']:
+                    print(f"{Tc.mag}= URLs ={Tc.rst}")
+                    for k in json_resp['detected_urls']:
+                        print(f"{Tc.red}>{Tc.rst} {k['url']}")
+                        print(f"  Positives: {k['positives']}")
+                        print(f"  Scan Date: {k['scan_date']}\n")
+                if json_resp['detected_downloaded_samples']:
+                    print(f"{Tc.mag}= Hashes ={Tc.rst}")
+                    for k in json_resp['detected_downloaded_samples']:
+                        print(f"{Tc.red}>{Tc.rst} {k['sha256']}")
+                        print(f"  Positives: {k['positives']}")
+                        print(f"  Date: {k['date']}\n")
+            except KeyError:
+                pass
         elif json_resp['response_code'] == 0:
             print(Tc.clean)
 
@@ -521,8 +526,6 @@ def parser():
     group2 = p.add_mutually_exclusive_group()
     p.add_argument('-t', dest='threads', nargs='?', type=int, metavar='threads',
                    default=25, help="threads for rbl check (default 25, max 50)")
-    p.add_argument('-w', dest='whois', action='store_true',
-                   help="perform ip whois lookup")
 
     group1.add_argument('-u', dest='update', action='store_true',
                         help="update blacklist feeds")
@@ -571,12 +574,9 @@ def main():
             except ValueError:
                 sys.exit(f"{Tc.warning} {'INVALID IP':12} {arg}")
 
-        if args.whois:
-            print(f"{Tc.dotsep}\n{Tc.green}[ Performing IP whois lookup ]{Tc.rst}\n")  # nopep8
-            pbl.ip_matches(ip_addrs, whois=args.whois)
-        else:
-            pbl.ip_matches(ip_addrs)
+        pbl.ip_matches(ip_addrs)
 
+        # single ip check
         if len(args.query) == 1:
             print(f"\n{Tc.dotsep}\n{Tc.green}[ Reputation Block List Check ]{Tc.rst}")  # nopep8
             dbl.dnsbl_mapper(args.threads)
@@ -604,15 +604,15 @@ def main():
 
                         with open(settings, 'w') as output:
                             yaml.dump(config, output)
-                            
+
                         api_key = config['VIRUS-TOTAL']['api_key']
-                        virustotal = VirusTotalChk(api_key)
+                        virustotal = VirusTotal(api_key)
                         virustotal.vt_run(ip_addrs)
                     except KeyboardInterrupt:
                         sys.exit("Exited")
                 else:
                     api_key = config['VIRUS-TOTAL']['api_key']
-                    virustotal = VirusTotalChk(api_key)
+                    virustotal = VirusTotal(api_key)
                     virustotal.vt_run(ip_addrs)
 
     if args.file:
