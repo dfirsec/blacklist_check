@@ -10,6 +10,7 @@ import time
 import urllib
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from configparser import ConfigParser
 from datetime import datetime
 from http.client import responses
 from ipaddress import IPv4Address, ip_address
@@ -24,12 +25,11 @@ import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
-from ruamel.yaml import YAML
 
 from utils.termcolors import Termcolor as Tc
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.1.2"
+__version__ = "v0.1.3"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -44,7 +44,7 @@ parent = Path(__file__).resolve().parent
 blklist = parent.joinpath('utils/blacklist.json')
 scnrs = parent.joinpath('utils/scanners.json')
 feeds = parent.joinpath('utils/feeds.json')
-settings = parent.joinpath('utils/settings.yml')
+settings = parent.joinpath('utils/settings.cfg')
 
 logger = verboselogs.VerboseLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -399,7 +399,7 @@ class VirusTotal():
                 if json_resp['resolutions']:
                     print(f"{Tc.mag}= Hostnames ={Tc.rst}")
                     for k in json_resp['resolutions']:
-                        print(f"{Tc.red}>{Tc.rst} {k['hostname']} ({k['last_resolved']})")  #nopep8
+                        print(f"{Tc.red}>{Tc.rst} {k['hostname']} ({k['last_resolved']})")  # nopep8
                 if json_resp['detected_urls']:
                     print(f"{Tc.mag}= URLs ={Tc.rst}")
                     for k in json_resp['detected_urls']:
@@ -591,27 +591,14 @@ def main():
             if args.vt_query:
                 print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")  # nopep8
                 # ---[ Configuration Parser ]---
-                yaml = YAML()
-                with open(settings) as _file:
-                    config = yaml.load(_file)
+                config = ConfigParser()
+                config.read(settings)
 
                 # verify vt api key
-                if not config['VIRUS-TOTAL']['api_key']:
-                    logger.warning("Please add VT API key to the 'settings.yml' file, or enter it below")  # nopep8
-                    try:
-                        user_vt_key = input("Enter key: ")
-                        config['VIRUS-TOTAL']['api_key'] = user_vt_key
-
-                        with open(settings, 'w') as output:
-                            yaml.dump(config, output)
-
-                        api_key = config['VIRUS-TOTAL']['api_key']
-                        virustotal = VirusTotal(api_key)
-                        virustotal.vt_run(ip_addrs)
-                    except KeyboardInterrupt:
-                        sys.exit("Exited")
+                if not config.get('virus-total', 'api_key'):
+                    sys.exit("Please add VT API key to the 'settings.cfg' file")  # nopep8
                 else:
-                    api_key = config['VIRUS-TOTAL']['api_key']
+                    api_key = config.get('virus-total', 'api_key')
                     virustotal = VirusTotal(api_key)
                     virustotal.vt_run(ip_addrs)
 
