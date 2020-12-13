@@ -12,6 +12,7 @@
         "ET Compromised": "https://rules.emergingthreats.net/blockrules/compromised-ips.txt",
         "ET Tor Rules": "https://rules.emergingthreats.net/blockrules/emerging-tor.rules",
         "GreenSnow": "https://blocklist.greensnow.co/greensnow.txt",
+        "Hacked Malware Sites": "https://raw.githubusercontent.com/mitchellkrogza/The-Big-List-of-Hacked-Malware-Web-Sites/master/hacked-domains.list",
         "IP Spamlist": "http://www.ipspamlist.com/public_feeds.csv",
         "Fedodo Tracker": "https://feodotracker.abuse.ch/downloads/ipblocklist.csv",
         "MalC0de Blacklist": "http://malc0de.com/bl/IP_Blacklist.txt",
@@ -27,7 +28,8 @@
         "Threatweb Botnet IPs": "https://www.threatweb.com/access/Botnet-IPs-High_Confidence_BL.txt",
         "Threatweb Watchlist": "https://www.threatweb.com/access/SIEM/OPTIV_HIGH_CONFIDENCE_SIEM_IP_WATCHLIST.txt",
         "URL Haus": "https://urlhaus.abuse.ch/downloads/csv_recent/",
-        "Windows SpyBlocker": "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/firewall/extra.txt"
+        "Windows SpyBlocker": "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/firewall/extra.txt",
+        "ZoneFiles": "https://zonefiles.io/f/compromised/ip/live/"
     },
     "DNS Blacklists": {
         "DNSBL": [
