@@ -18,6 +18,7 @@ import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
+from querycontacts import ContactFinder
 
 from utils.termcolors import Termcolor as Tc
 
@@ -218,6 +219,7 @@ class ProcessBL():
 
     def ip_matches(self, ip_addrs):
         found = []
+        qf = ContactFinder()
 
         def worker(json_list, list_name, list_type):
             global name, ip
@@ -230,7 +232,8 @@ class ProcessBL():
                     for ip in matches:
                         print(f"\n{list_type} [{ip}] > {Tc.yellow}{name}{Tc.rst}")  # nopep8
                         print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")  # nopep8
-                        print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}\n")  # nopep8
+                        print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")  # nopep8
+                        print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")  # nopep8
                         if ip not in found:
                             found.append(ip)
                 except ValueError:
@@ -251,7 +254,8 @@ class ProcessBL():
             for ip in nomatch:
                 print(f"\n{Tc.clean}{Tc.rst} [{ip}]")
                 print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")  # nopep8
-                print(f"{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}\n")  # nopep8
+                print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")  # nopep8
+                print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")  # nopep8
 
     @staticmethod
     def modified_date(_file):
