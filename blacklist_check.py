@@ -46,7 +46,7 @@ def parser():
                         help="force update of all feeds")
     group1.add_argument('-s', dest='show', action='store_true',
                         help="show blacklist feeds")
-    group1.add_argument('-vt', dest='vt_query', action='store_true',
+    group1.add_argument('-v', dest='vt_query', action='store_true',
                         help="check virustotal for ip info")
 
     group2.add_argument('-q', dest='query', nargs='+', metavar='query',
