@@ -41,7 +41,7 @@ optional arguments:
 
 #### Example Run
 
-![alt text](images/blacklist_check.gif)
+![alt text](imgs/blacklist_check.gif)
 
 ### Update Blacklisted IPs from feeds
 
