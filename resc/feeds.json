@@ -4,6 +4,8 @@
         "Bitcoin Nodes": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/bitcoin_nodes.ipset",
         "Blocklist DE": "http://www.blocklist.de/lists/all.txt",
         "Bot Scout IPs": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/botscout.ipset",
+        "Botvrij.eu IPs": "https://botvrij.eu/data/ioclist.ip-dst",
+        "Botvrij.eu URls": "https://botvrij.eu/data/ioclist.url",
         "Brute Force Blocker": "http://danger.rulez.sk/projects/bruteforceblocker/blist.php",
         "CI Army Badguys": "http://www.ciarmy.com/list/ci-badguys.txt",
         "Coin Blacklist Hosts": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/coinbl_hosts.ipset",

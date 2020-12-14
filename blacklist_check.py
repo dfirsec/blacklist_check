@@ -21,43 +21,54 @@ __description__ = "Check IP addresses against blacklists from various sources."
 
 
 # suppress dnspython feature deprecation warning
-warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # suppress certificate verification
 urllib3.disable_warnings()
 
-# Base directory
+# Base directory paths
 parent = Path(__file__).resolve().parent
-blklist = parent.joinpath('resc/blacklist.json')
-feeds = parent.joinpath('resc/feeds.json')
-settings = parent.joinpath('settings.cfg')
+blklist = parent.joinpath("resc/blacklist.json")
+feeds = parent.joinpath("resc/feeds.json")
+settings = parent.joinpath("settings.cfg")
 
 
 def parser():
     p = argparse.ArgumentParser(description="IP Blacklist Check")
     group1 = p.add_mutually_exclusive_group()
     group2 = p.add_mutually_exclusive_group()
-    p.add_argument('-t', dest='threads', nargs='?', type=int, metavar='threads',
-                   default=25, help="threads for rbl check (default 25, max 50)")
 
-    group1.add_argument('-u', dest='update', action='store_true',
-                        help="update blacklist feeds")
-    group1.add_argument('-fu', dest='force', action='store_true',
-                        help="force update of all feeds")
-    group1.add_argument('-s', dest='show', action='store_true',
-                        help="show blacklist feeds")
-    group1.add_argument('-v', dest='vt_query', action='store_true',
-                        help="check virustotal for ip info")
+    p.add_argument(
+        "-t",
+        dest="threads",
+        nargs="?",
+        type=int,
+        metavar="threads",
+        default=25,
+        help="threads for rbl check (default 25, max 50)",
+    )
 
-    group2.add_argument('-q', dest='query', nargs='+', metavar='query',
-                        help="query a single or multiple ip addrs")
+    group1.add_argument("-u", dest="update", action="store_true", help="update blacklist feeds")
+    group1.add_argument("-fu", dest="force", action="store_true", help="force update of all feeds")
+    group1.add_argument("-s", dest="show", action="store_true", help="show blacklist feeds")
+    group1.add_argument("-v", dest="vt_query", action="store_true", help="check virustotal for ip info")
 
-    group2.add_argument('-f', dest='file', metavar='file',
-                        help="query a list of ip addresses from file")
-    group2.add_argument('-i', dest='insert', action='store_true',
-                        help='insert a new blacklist feed')
-    group2.add_argument('-r', dest='remove', action='store_true',
-                        help='remove an existing blacklist feed')
+    group2.add_argument(
+        "-q",
+        dest="query",
+        nargs="+",
+        metavar="query",
+        help="query a single or multiple ip addrs",
+    )
+
+    group2.add_argument("-f", dest="file", metavar="file", help="query a list of ip addresses from file")
+    group2.add_argument("-i", dest="insert", action="store_true", help="insert a new blacklist feed")
+    group2.add_argument(
+        "-r",
+        dest="remove",
+        action="store_true",
+        help="remove an existing blacklist feed",
+    )
 
     return p
 
@@ -82,8 +93,8 @@ def main():
         ip_addrs = []
         for arg in args.query:
             try:
-                IPv4Address(arg.replace(',', ''))
-                ip_addrs.append(arg.replace(',', ''))
+                IPv4Address(arg.replace(",", ""))
+                ip_addrs.append(arg.replace(",", ""))
             except ValueError:
                 sys.exit(f"{Tc.warning} {'INVALID IP':12} {arg}")
 
@@ -91,27 +102,27 @@ def main():
 
         # single ip check
         if len(args.query) == 1:
-            print(f"\n{Tc.dotsep}\n{Tc.green}[ Reputation Block List Check ]{Tc.rst}")  # nopep8
+            print(f"\n{Tc.dotsep}\n{Tc.green}[ Reputation Block List Check ]{Tc.rst}")
             dbl.dnsbl_mapper(args.threads)
 
-            print(f"\n{Tc.dotsep}\n{Tc.green}[ IP-46 IP Intel Check ]{Tc.rst}")  # nopep8
+            print(f"\n{Tc.dotsep}\n{Tc.green}[ IP-46 IP Intel Check ]{Tc.rst}")
             pbl.ip46_qry(args.query)
 
-            print(f"\n{Tc.dotsep}\n{Tc.green}[ URLhaus Check ]{Tc.rst}")  # nopep8
+            print(f"\n{Tc.dotsep}\n{Tc.green}[ URLhaus Check ]{Tc.rst}")
             pbl.urlhaus_qry(args.query)
 
             # VirusTotal Query
             if args.vt_query:
-                print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")  # nopep8
+                print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")
                 # ---[ Configuration Parser ]---
                 config = ConfigParser()
                 config.read(settings)
 
                 # verify vt api key
-                if not config.get('virus-total', 'api_key'):
-                    sys.exit("Please add VT API key to the 'settings.cfg' file")  # nopep8
+                if not config.get("virus-total", "api_key"):
+                    sys.exit("Please add VT API key to the 'settings.cfg' file")
                 else:
-                    api_key = config.get('virus-total', 'api_key')
+                    api_key = config.get("virus-total", "api_key")
                     virustotal = VirusTotal(api_key)
                     virustotal.vt_run(ip_addrs)
 
@@ -155,16 +166,17 @@ def main():
                 try:
                     urllib.request.urlopen(url, timeout=3)
                     print(f"[*] URL is good")
-                    confirm = input(f'[?] Insert the following feed? \nName: {feed} | URL: {url} {Tc.yellow}(Y/n){Tc.rst}: ')  # nopep8
-                    if confirm.lower() == 'y':
-                        pbl.add_feed(feed=feed.replace(',', ''),
-                                     url=url.replace(',', ''))
+                    confirm = input(
+                        f"[?] Insert the following feed? \nName: {feed} | URL: {url} {Tc.yellow}(Y/n){Tc.rst}: "
+                    )
+                    if confirm.lower() == "y":
+                        pbl.add_feed(feed=feed.replace(",", ""), url=url.replace(",", ""))
                     else:
                         sys.exit(f"[!] Request canceled")
                     break
 
                 except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
-                    print(f"{Tc.error} URL '{url}' appears to be invalid or inaccessible.")  # nopep8
+                    print(f"{Tc.error} URL '{url}' appears to be invalid or inaccessible.")
             else:
                 sys.exit(f"{Tc.error} Please include the feed name and url.")
 
@@ -172,31 +184,32 @@ def main():
         pbl.remove_feed()
 
     if args.threads > 50:
-        sys.exit(f"{Tc.error} Exceeded max of 50 threads.{Tc.rst}")  # nopep8
+        sys.exit(f"{Tc.error} Exceeded max of 50 threads.{Tc.rst}")
 
 
 if __name__ == "__main__":
-    banner = fr'''
+    banner = fr"""
         ____  __           __   ___      __     ________              __  
        / __ )/ /___ ______/ /__/ (_)____/ /_   / ____/ /_  ___  _____/ /__
       / __  / / __ `/ ___/ //_/ / / ___/ __/  / /   / __ \/ _ \/ ___/ //_/
      / /_/ / / /_/ / /__/ ,< / / (__  ) /_   / /___/ / / /  __/ /__/ ,<   
     /_____/_/\__,_/\___/_/|_/_/_/____/\__/   \____/_/ /_/\___/\___/_/|_|
                                                                 {__version__}
-    '''
+    """
 
     print(f"{Tc.cyan}{banner}{Tc.rst}")
 
     # check if python version
     if not sys.version_info.major == 3 and sys.version_info.minor >= 8:
         print("Python 3.8 or higher is required.")
-        sys.exit(f"You are using Python {sys.version_info.major}.{sys.version_info.minor}")  # nopep8
+        sys.exit(f"Your Python Version: {sys.version_info.major}.{sys.version_info.minor}")
 
     # check if new version is available
     try:
-        latest = requests.get(f"https://api.github.com/repos/dfirsec/{parent.stem}/releases/latest").json()['tag_name']  # nopep8
+        latest = requests.get(f"https://api.github.com/repos/dfirsec/{parent.stem}/releases/latest").json()["tag_name"]
+
         if latest != __version__:
-            print(f"{Tc.yellow}* Release {latest} of {parent.stem} is available{Tc.rst}")  # nopep8
+            print(f"{Tc.yellow}* Release {latest} of {parent.stem} is available{Tc.rst}")
     except Exception as err:
         print(f"{Tc.error} [Error]{Tc.rst} {err}\n")
 
