@@ -3,6 +3,8 @@ import sys
 from http.client import responses
 
 import requests
+from requests.exceptions import (ConnectionError, HTTPError, RequestException,
+                                 Timeout)
 
 from utils.termcolors import Termcolor as Tc
 
@@ -19,23 +21,17 @@ class VirusTotal:
     def vt_connect(url):
         try:
             resp = requests.get(url, timeout=5)
-            resp.encoding = "utf-8"
             if resp.status_code == 401:
                 sys.exit("[error] Invalid API key.")
             if resp.status_code != 200:
                 print(f" {Tc.error} {Tc.gray} {resp.status_code} {responses[resp.status_code]}{url}{Tc.rst}")
             else:
                 return resp.json()
-        except (
-            requests.exceptions.Timeout,
-            requests.exceptions.HTTPError,
-            requests.exceptions.ConnectionError,
-            requests.exceptions.RequestException,
-        ):
+        except (ConnectionError, HTTPError, RequestException, Timeout):
             print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{Tc.rst}")
 
-    def vt_run(self, ip_addr):
-        url = f"{self.base_url}{self.api_key}&ip={''.join(ip_addr)}"
+    def vt_run(self, ip):
+        url = f"{self.base_url}{self.api_key}&ip={''.join(ip)}"
         data = json.dumps(self.vt_connect(url))
         json_resp = json.loads(data)
         if json_resp["response_code"] == 1:
@@ -45,13 +41,13 @@ class VirusTotal:
                     for k in json_resp["resolutions"]:
                         print(f"{Tc.red}>{Tc.rst} {k['hostname']} ({k['last_resolved']})")
                 if json_resp["detected_urls"]:
-                    print(f"{Tc.mag}= URLs ={Tc.rst}")
+                    print(f"\n{Tc.mag}= URLs ={Tc.rst}")
                     for k in json_resp["detected_urls"]:
                         print(f"{Tc.red}>{Tc.rst} {k['url']}")
                         print(f"  Positives: {k['positives']}")
                         print(f"  Scan Date: {k['scan_date']}\n")
                 if json_resp["detected_downloaded_samples"]:
-                    print(f"{Tc.mag}= Hashes ={Tc.rst}")
+                    print(f"\n{Tc.mag}= Hashes ={Tc.rst}")
                     for k in json_resp["detected_downloaded_samples"]:
                         print(f"{Tc.red}>{Tc.rst} {k['sha256']}")
                         print(f"  Positives: {k['positives']}")

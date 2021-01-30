@@ -1,7 +1,8 @@
 import argparse
 import os
 import sys
-import urllib
+import urllib.error
+import urllib.request
 import warnings
 from configparser import ConfigParser
 from ipaddress import IPv4Address
@@ -14,9 +15,10 @@ from utils.blworker import ProcessBL
 from utils.dnsblworker import DNSBL
 from utils.termcolors import Termcolor as Tc
 from utils.vtworker import VirusTotal
+from utils.aipdbworker import AbuseIPDB
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.1.4"
+__version__ = "v0.1.5"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -47,12 +49,14 @@ def parser():
         default=25,
         help="threads for rbl check (default 25, max 50)",
     )
+    
+    p.add_argument("-v", dest="vt_query", action="store_true", help="check virustotal for ip info")
+    p.add_argument("-a", dest="aipdb_query", action="store_true", help="check abuseipdb for ip info")
 
     group1.add_argument("-u", dest="update", action="store_true", help="update blacklist feeds")
     group1.add_argument("-fu", dest="force", action="store_true", help="force update of all feeds")
     group1.add_argument("-s", dest="show", action="store_true", help="show blacklist feeds")
-    group1.add_argument("-v", dest="vt_query", action="store_true", help="check virustotal for ip info")
-
+    
     group2.add_argument(
         "-q",
         dest="query",
@@ -110,21 +114,34 @@ def main():
 
             print(f"\n{Tc.dotsep}\n{Tc.green}[ URLhaus Check ]{Tc.rst}")
             pbl.urlhaus_qry(args.query)
+            
+            # ---[ Configuration Parser ]---
+            config = ConfigParser()
+            config.read(settings)
 
             # VirusTotal Query
             if args.vt_query:
                 print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")
-                # ---[ Configuration Parser ]---
-                config = ConfigParser()
-                config.read(settings)
 
-                # verify vt api key
-                if not config.get("virus-total", "api_key"):
+                # verify api key
+                if not config.get("virustotal", "api_key"):
                     sys.exit("Please add VT API key to the 'settings.cfg' file")
                 else:
-                    api_key = config.get("virus-total", "api_key")
+                    api_key = config.get("virustotal", "api_key")
                     virustotal = VirusTotal(api_key)
                     virustotal.vt_run(ip_addrs)
+            
+            # AbuseIPDB
+            if args.aipdb_query:
+                print(f"\n{Tc.dotsep}\n{Tc.green}[ AbuseIPDB Check ]{Tc.rst}")
+                
+                # verify api key
+                if not config.get("abuseipdb", "api_key"):
+                    sys.exit("Please add AbuseIPDB API key to the 'settings.cfg' file")
+                else:
+                    api_key = config.get("abuseipdb", "api_key")
+                    abuseipdb = AbuseIPDB(api_key)
+                    abuseipdb.aipdb_run(ip_addrs)
 
     if args.file:
         pbl.outdated()

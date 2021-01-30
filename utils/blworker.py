@@ -19,6 +19,7 @@ import verboselogs
 from bs4 import BeautifulSoup
 from ipwhois import IPWhois, exceptions
 from querycontacts import ContactFinder
+from dns.exception import DNSException
 
 from utils.termcolors import Termcolor as Tc
 
@@ -54,20 +55,13 @@ class ProcessBL:
     @staticmethod
     def headers():
         ua_list = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.66",
             "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/40.0.2214.38 Safari/537.36",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 "
-            "Safari/601.3.9",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.38 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9",
             "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/43.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 "
-            "Safari/537.36 Edge/12.246",
-            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 "
-            "Safari/537.36",
-            "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 "
-            "Safari/537.36",
-            "Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 "
-            "Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
+            "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36",
             "Mozilla/5.0 (X11; Linux i686; rv:30.0) Gecko/20100101 Firefox/42.0",
             "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1",
         ]
@@ -226,7 +220,10 @@ class ProcessBL:
                         print(f"\n{list_type} [{ip}] > {Tc.yellow}{name}{Tc.rst}")
                         print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")
                         print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")
-                        print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
+                        try:
+                            print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
+                        except DNSException:
+                            pass
                         if ip not in found:
                             found.append(ip)
                 except ValueError:
@@ -248,7 +245,10 @@ class ProcessBL:
                 print(f"\n{Tc.clean}{Tc.rst} [{ip}]")
                 print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")
                 print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")
-                print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
+                try:
+                    print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
+                except DNSException:
+                    pass
 
     @staticmethod
     def modified_date(_file):
