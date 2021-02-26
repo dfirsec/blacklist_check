@@ -1,3 +1,4 @@
+import fnmatch
 import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
@@ -60,10 +61,10 @@ class DNSBL:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["DNS Blacklists"]["DNSBL"]
 
-        # remove 'contact' items from list
-        contacts = ["contacts.abuse.net", "abuse-contacts.abusix.org"]
-        for contact in contacts:
-            alive.remove(contact)
+        """ remove contact and nszones items from list """
+        patterns = ["*.nszones.com", "*contacts*"]
+        for pattern in patterns:
+            [alive.remove(x) for x in fnmatch.filter(alive, pattern)]
 
         diff = [x for x in alive if x not in feed_list]
         if len(diff) > 1:
