@@ -28,10 +28,11 @@ IP Blacklist Check
 optional arguments:
   -h, --help            show this help message and exit
   -t [threads]          threads for rbl check (default 25, max 50)
+  -v                    check virustotal for ip info
+  -a                    check abuseipdb for ip info
   -u                    update blacklist feeds
   -fu                   force update of all feeds
   -s                    show blacklist feeds
-  -v                    check virustotal for ip info
   -q query [query ...]  query a single or multiple ip addrs
   -f file               query a list of ip addresses from file
   -i                    insert a new blacklist feed
