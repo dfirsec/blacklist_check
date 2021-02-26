@@ -19,11 +19,13 @@ class URLScan:
         except (ConnectionError, HTTPError, RequestException, Timeout):
             print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{Tc.rst}")
         except KeyError:
-            print("Missing data: Double-check ip address")
+            print("Issue encountered with query")
         else:
             if resp["results"]:
-                for p in resp["results"]:
-                    for k, v in p["page"].items():
-                        print(f"{    k.upper():10}: {v}")
+                for results in resp["results"]:
+                    for k, v in results["page"].items():
+                        print(f"{k.title():12}: {v}")
+                    print(f"{'Result':12}: {results['result']}")
+                    print(f"{'Screenshot':12}: {results['screenshot']}")
             else:
                 print(Tc.clean)

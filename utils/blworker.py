@@ -324,28 +324,31 @@ class ProcessBL:
     @staticmethod
     def urlhaus_base(ip_addr):
         base_url = "https://urlhaus-api.abuse.ch/v1/host/"
-        resp = requests.post(base_url, data={"host": ip_addr})
+        resp = requests.post(base_url, data={"host": ip_addr}, timeout=5)
 
         if resp.status_code == 200:
             return resp.json()
 
     def urlhaus_qry(self, ip_addr):
-        if self.urlhaus_base(ip_addr)["query_status"] == "no_results":
-            print(Tc.clean)
-        else:
-            if self.urlhaus_base(ip_addr)["urls"]:
-                for k in self.urlhaus_base(ip_addr)["urls"]:
-                    if k["url_status"] == "online":
-                        print(f"Status: {Tc.red}{k['url_status'].title()}{Tc.rst}")
-                        print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
-                        if k["tags"]:
-                            print(f"Tags: {', '.join(k['tags'])}\n")
+        try:
+            if self.urlhaus_base(ip_addr)["query_status"] == "no_results":
+                print(Tc.clean)
+            else:
+                if self.urlhaus_base(ip_addr)["urls"]:
+                    for k in self.urlhaus_base(ip_addr)["urls"]:
+                        if k["url_status"] == "online":
+                            print(f"Status: {Tc.red}{k['url_status'].title()}{Tc.rst}")
+                            print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
+                            if k["tags"]:
+                                print(f"Tags: {', '.join(k['tags'])}\n")
+                            else:
+                                print("\n")
                         else:
-                            print("\n")
-                    else:
-                        print(f"Status: {k['url_status'].title()}")
-                        print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
-                        if k["tags"]:
-                            print(f"Tags: {', '.join(k['tags'])}\n")
-                        else:
-                            print("\n")
+                            print(f"Status: {k['url_status'].title()}")
+                            print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
+                            if k["tags"]:
+                                print(f"Tags: {', '.join(k['tags'])}\n")
+                            else:
+                                print("\n")
+        except TypeError:
+            return None
