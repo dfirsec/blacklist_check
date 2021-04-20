@@ -20,7 +20,7 @@ class Termcolor:
     processing = f"{cyan}>{rst}"
     success = f"{green}\u2714{rst}"
     warning = f"{yellow}\u03DF{rst}"
-    error = f"{red}\u2718{rst}"
+    error = f"{red}\u2716{rst}"
     question = f"{yellow}\uFF1F{rst}"
 
     # queries

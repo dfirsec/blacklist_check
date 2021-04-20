@@ -14,12 +14,13 @@ import urllib3
 from utils.aipdbworker import AbuseIPDB
 from utils.blworker import ProcessBL
 from utils.dnsblworker import DNSBL
+from utils.showorker import ShodanIP
 from utils.termcolors import Termcolor as Tc
 from utils.urlscworker import URLScan
 from utils.vtworker import VirusTotal
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.1.6"
+__version__ = "v0.1.7"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -53,18 +54,13 @@ def parser():
 
     p.add_argument("-v", dest="vt_query", action="store_true", help="check virustotal for ip info")
     p.add_argument("-a", dest="aipdb_query", action="store_true", help="check abuseipdb for ip info")
+    p.add_argument("-s", dest="shodan_query", action="store_true", help="check shodan for ip info")
 
     group1.add_argument("-u", dest="update", action="store_true", help="update blacklist feeds")
     group1.add_argument("-fu", dest="force", action="store_true", help="force update of all feeds")
-    group1.add_argument("-s", dest="show", action="store_true", help="show blacklist feeds")
+    group1.add_argument("-sh", dest="show", action="store_true", help="show blacklist feeds")
 
-    group2.add_argument(
-        "-q",
-        dest="query",
-        nargs="+",
-        metavar="query",
-        help="query a single or multiple ip addrs",
-    )
+    group2.add_argument("-q", dest="query", nargs="+", metavar="query", help="query a single or multiple ip addrs")
 
     group2.add_argument("-f", dest="file", metavar="file", help="query a list of ip addresses from file")
     group2.add_argument("-i", dest="insert", action="store_true", help="insert a new blacklist feed")
@@ -76,6 +72,20 @@ def parser():
     )
 
     return p
+
+
+def check_apikey(name, query_type):
+    # ---[ Configuration Parser ]---
+    config = ConfigParser()
+    config.read(settings)
+
+    # verify api key
+    if not config.get(f"{name}", "api_key"):
+        sys.exit(f"Please add {name} API key to the 'settings.cfg' file")
+    else:
+        api_key = config.get(f"{name}", "api_key")
+        name = query_type(api_key)
+        return name
 
 
 def main():
@@ -106,7 +116,7 @@ def main():
 
         pbl.ip_matches(ip_addrs)
 
-        # single ip check
+        # Single ip check
         if len(args.query) == 1:
             print(f"\n{Tc.dotsep}\n{Tc.green}[ Reputation Block List Check ]{Tc.rst}")
             dbl.dnsbl_mapper(args.threads)
@@ -116,37 +126,24 @@ def main():
 
             print(f"\n{Tc.dotsep}\n{Tc.green}[ URLhaus Check ]{Tc.rst}")
             pbl.urlhaus_qry(args.query)
-            
+
             print(f"\n{Tc.dotsep}\n{Tc.green}[ URLScan Check ]{Tc.rst}")
             urlsc.urlsc_qry(args.query)
-
-            # ---[ Configuration Parser ]---
-            config = ConfigParser()
-            config.read(settings)
 
             # VirusTotal Query
             if args.vt_query:
                 print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")
-
-                # verify api key
-                if not config.get("virustotal", "api_key"):
-                    sys.exit("Please add VT API key to the 'settings.cfg' file")
-                else:
-                    api_key = config.get("virustotal", "api_key")
-                    virustotal = VirusTotal(api_key)
-                    virustotal.vt_run(ip_addrs)
+                check_apikey("virustotal", VirusTotal).vt_run(ip_addrs)
 
             # AbuseIPDB
             if args.aipdb_query:
                 print(f"\n{Tc.dotsep}\n{Tc.green}[ AbuseIPDB Check ]{Tc.rst}")
+                check_apikey("abuseipdb", AbuseIPDB).aipdb_run(ip_addrs)
 
-                # verify api key
-                if not config.get("abuseipdb", "api_key"):
-                    sys.exit("Please add AbuseIPDB API key to the 'settings.cfg' file")
-                else:
-                    api_key = config.get("abuseipdb", "api_key")
-                    abuseipdb = AbuseIPDB(api_key)
-                    abuseipdb.aipdb_run(ip_addrs)
+            # Shodan
+            if args.shodan_query:
+                print(f"\n{Tc.dotsep}\n{Tc.green}[ Shodan Check ]{Tc.rst}")
+                check_apikey("shodan", ShodanIP).shodan_run(ip_addrs)
 
     if args.file:
         pbl.outdated()

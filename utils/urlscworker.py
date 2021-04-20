@@ -19,13 +19,12 @@ class URLScan:
         except (ConnectionError, HTTPError, RequestException, Timeout):
             print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{Tc.rst}")
         except KeyError:
-            print("Issue encountered with query")
+            print(f"{Tc.error} Issue encountered with query")
         else:
             if resp["results"]:
                 for results in resp["results"]:
                     for k, v in results["page"].items():
                         print(f"{k.title():12}: {v}")
-                    print(f"{'Result':12}: {results['result']}")
-                    print(f"{'Screenshot':12}: {results['screenshot']}")
+                    print(f"{'Result':12}: {results['result']}\n{'Screenshot':12}: {results['screenshot']}")
             else:
                 print(Tc.clean)

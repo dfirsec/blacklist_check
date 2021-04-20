@@ -17,9 +17,9 @@ import trio
 import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
+from dns.exception import DNSException
 from ipwhois import IPWhois, exceptions
 from querycontacts import ContactFinder
-from dns.exception import DNSException
 
 from utils.termcolors import Termcolor as Tc
 

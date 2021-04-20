@@ -6,5 +6,6 @@ ipwhois>=1.1.0
 lxml>=4.5.2
 querycontacts>=2.0.0
 requests>=2.24.0
+shodan>=1.25.0
 trio>=0.17.0
 verboselogs>=1.7
