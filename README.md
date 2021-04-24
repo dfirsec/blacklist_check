@@ -42,7 +42,7 @@ optional arguments:
 
 #### Example Run
 
-![alt text](imgs/blacklist_check.gif)
+![alt text](imgs/animation.gif)
 
 ### Check if IP is blacklisted
 

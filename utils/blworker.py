@@ -224,6 +224,7 @@ class ProcessBL:
                             print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
                         except DNSException:
                             pass
+                
                         if ip not in found:
                             found.append(ip)
                 except ValueError:

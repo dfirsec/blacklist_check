@@ -29,10 +29,10 @@ class AbuseIPDB:
             report = resp["data"]["lastReportedAt"]
             if ip_addr and score >= 90:
                 print(f"{Tc.blacklisted} {''.join(ip)}")
-                print(f"Last Reported: {report}")
-                print(f"Confidence of Abuse is: {score}%")
+                print(f"{Tc.red}>{Tc.rst}  Last Reported: {report}")
+                print(f"{Tc.red}>{Tc.rst}  Confidence of Abuse is: {score}%")
             elif ip_addr and report is not None and score < 90:
-                print(f"Last Reported: {report}")
-                print(f"Confidence of Abuse is: {score}%")
+                print(f"{Tc.red}>{Tc.rst}  Last Reported: {report}")
+                print(f"{Tc.red}>{Tc.rst}  Confidence of Abuse is: {score}%")
             else:
                 print(Tc.clean)
