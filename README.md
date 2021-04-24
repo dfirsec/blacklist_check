@@ -2,7 +2,13 @@
 
 ![Generic badge](https://img.shields.io/badge/python-3.7-blue.svg) [![Twitter](https://img.shields.io/badge/Twitter-@pulsecode-blue.svg)](https://twitter.com/pulsecode)
 
-Python script to download blacklists from various sources and check IP addresses against those blacklists. Utilizes the FreeGeopIP Live service for IP geolocation. (ref: <https://freegeoip.live/)>
+Python script that downloads IP reputation blacklists from various sources and queries an IP address, or multiple IPs, against those lists. Utilizes the FreeGeopIP Live service for IP geolocation. (ref: <https://freegeoip.live/)>
+
+API Key required for (add to `settings.cfg` file):
+
+- AbuseIPDB
+- Shodan
+- VirusTotal
 
 ## Installation
 
@@ -40,129 +46,6 @@ optional arguments:
   -r                    remove an existing blacklist feed
 ```
 
-#### Example Run
+### Example Run
 
 ![alt text](imgs/animation.gif)
-
-### Check if IP is blacklisted
-
-#### Single
-
-```text
-python blacklist_check.py" -q 104.152.52.31
-
-✖  Blacklisted [104.152.52.31] > Alien Vault Reputation
-   Location: United States (US)
-
-✖  Blacklisted [104.152.52.31] > CI Army Badguys
-   Location: United States (US)
-
-................................
-[ Reputation Block List Check ]
-✖  Blacklisted > abuse-contacts.abusix.org
-✖  Blacklisted > abuse.spfbl.net
-✖  Blacklisted > all.s5h.net
-✖  Blacklisted > black.dnsbl.brukalai.lt
-✖  Blacklisted > contacts.abuse.net
-✖  Blacklisted > dnsbl.justspam.org
-✖  Blacklisted > dnsbl.rymsho.ru
-✖  Blacklisted > dnsbl.spfbl.net
-✖  Blacklisted > dnsbl-2.uceprotect.net
-✖  Blacklisted > free.v4bl.org
-✖  Blacklisted > light.dnsbl.brukalai.lt
-✖  Blacklisted > origin.asn.spameatingmonkey.net
-✖  Blacklisted > origin.asn.cymru.com
-✖  Blacklisted > peer.asn.cymru.com
-✖  Blacklisted > rbl.rbldns.ru
-
-[*] 104.152.52.31 is listed in 15 block lists
-
-................................
-[ IP-46 IP Intel Check ]
-294 attacks reported for 104.152.52.31 (mainly by Port Scan). 104.152.52.31 is an Open Proxy used by Hackers
-
-................................
-[ URLhaus Check ]
-✔  NOT LISTED
-```
-
-#### Multiple inline
-
-```text
-python blacklist_check.py -q 5.255.250.96, 78.46.85.236, 46.229.168.146
-
-✔  NOT LISTED  [5.255.250.96]
-   Location: Moscow, Russia (RU)
-   Whois:  38 Merrimac St., Suite 201, Newburyport, MA 01950
-
-
-✔  NOT LISTED  [78.46.85.236]
-   Location: Germany (DE)
-   Whois:  Hetzner Online AG
-
-
-✔  NOT LISTED  [46.229.168.146]
-   Location: Ashburn, Virginia (US)
-   Whois:  Advanced Hosters B.V.
-```
-
-#### Multiple from file
-
-```text
-python blacklist_check.py -f ip_list.txt
-```
-
-#### VirusTotal Check (requires api key)
-
-```text
-python blacklist_check.py -q 3.135.65.187 -vt
-................................
-[ VirusTotal Check ]
-Please add VT API key to the 'settings.yml' file, or enter it below
-Enter key: <API KEY>
-= URLs =
-> http://3.135.65.187/
-  Positives: 2
-  Scan Date: 2020-12-03 03:29:33
-
-> http://3.135.65.187/iejbl7.rar/
-  Positives: 6
-  Scan Date: 2020-12-03 03:16:08
-
-> http://3.135.65.187/iejbl7.rar
-  Positives: 7
-  Scan Date: 2020-12-03 01:33:59
-
-> https://3.135.65.187/
-  Positives: 2
-  Scan Date: 2020-12-03 01:10:16
-
-> http://3.135.65.187/ek2atk2q.zip
-  Positives: 8
-  Scan Date: 2020-11-19 14:07:04
-
-> http://3.135.65.187/goal.php
-  Positives: 2
-  Scan Date: 2020-11-17 19:04:07
-
-> http://3.135.65.187/wp-content/uploads/2020/10/zinold.php
-  Positives: 1
-  Scan Date: 2020-11-05 06:41:45
-
-= Hashes =
-> 2aa35dc4f75e7a7a3e26561c5f051a50c4c13f90a3e2ac2c663139868f35f09f
-  Positives: 19
-  Date: 2020-12-02 20:07:21
-
-> f2e354c9a4a21528e843122e38ed656d665a5e32141e26a1d60602a382d44912
-  Positives: 20
-  Date: 2020-11-19 12:02:02
-
-> 83c390d82e19beec14d007b7350f4296c23ce9b3d131a3670ebb7424ad917410
-  Positives: 12
-  Date: 2020-11-18 22:42:02
-
-> d49f5b9b3da2c5ae18f28c40d008544337ba6e5febd76a8c88619079d0c262ca
-  Positives: 19
-  Date: 2020-11-18 11:43:21
-```
