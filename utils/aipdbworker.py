@@ -15,7 +15,7 @@ class AbuseIPDB:
             sys.exit(f"{Tc.yellow}* Verify that you have provided your API key{Tc.rst}")
 
     def aipdb_run(self, ip):
-        self.params = ("ipAddress", ip), ("confidenceMinimum", "90")
+        self.params = ("ipAddress", ip),
         self.base_url = f"https://api.abuseipdb.com/api/v2/check"
         try:
             resp = requests.get(self.base_url, headers=self.headers, params=self.params).json()
@@ -25,7 +25,8 @@ class AbuseIPDB:
             print("Missing data: Double-check ip and/or api key")
         else:
             ip_addr = resp["data"]["ipAddress"]
-            if bool(ip_addr):
+            score = resp["data"]["abuseConfidenceScore"]
+            if ip_addr and score == 100:
                 print(f"{Tc.blacklisted} {''.join(ip)}")
             else:
                 print(Tc.clean)
