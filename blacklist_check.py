@@ -20,7 +20,7 @@ from utils.urlscworker import URLScan
 from utils.vtworker import VirusTotal
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.1.7"
+__version__ = "v0.1.8"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
