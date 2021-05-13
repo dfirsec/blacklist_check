@@ -1,3 +1,4 @@
+import ipaddress
 import json
 import logging
 import os
@@ -208,7 +209,7 @@ class ProcessBL:
         found = []
         qf = ContactFinder()
 
-        def worker(json_list, list_name, list_type):
+        def bls_worker(json_list, list_name, list_type):
             global name, ip
             with open(json_list) as json_file:
                 ip_list = json.load(json_file)
@@ -224,7 +225,7 @@ class ProcessBL:
                             print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
                         except DNSException:
                             pass
-                
+
                         if ip not in found:
                             found.append(ip)
                 except ValueError:
@@ -234,12 +235,42 @@ class ProcessBL:
                 except TypeError:
                     continue
 
+        def scs_worker(json_list, list_name, list_type):
+            global ip
+            with open(json_list) as json_file:
+                ip_list = json.load(json_file)
+
+            # single ip addresses
+            shodan = [ip for ip in ip_list[list_name]["Shodan"]]
+            s_matches = set(ip_addrs) & set(shodan)
+            for ip in s_matches:
+                print(f"\n{list_type} [{ip}] > {Tc.yellow}Shodan{Tc.rst}")
+                if ip not in found:
+                    found.append(ip)
+
+            proj25499 = [ip for ip in ip_list[list_name]["Project 25499"]]
+            p_matches = set(ip_addrs) & set(proj25499)
+            for ip in p_matches:
+                print(f"\n{list_type} [{ip}] > {Tc.yellow}Project 25499{Tc.rst}")
+                if ip not in found:
+                    found.append(ip)
+
+            # networks
+            tenable = [net for net in ip_list[list_name]["Cloudflare-Tenable"]]
+            t_matches = [
+                ip for ip in ip_addrs for net in tenable if ipaddress.ip_address(ip) in ipaddress.ip_network(net)
+            ]
+            for ip in set(t_matches):
+                print(f"\n{list_type} [{ip}] > {Tc.yellow}Cloudflare-Tenable{Tc.rst}")
+                if ip not in found:
+                    found.append(ip)
+    
         # Compare and find blacklist matches
-        worker(blklist, "Blacklists", Tc.blacklisted)
+        bls_worker(blklist, "Blacklists", Tc.blacklisted)
 
         # Compare and find scanner matches
         # ref: https://wiki.ipfire.org/configuration/firewall/blockshodan
-        worker(scnrs, "Scanners", Tc.scanner)
+        scs_worker(scnrs, "Scanners", Tc.scanner)
 
         # if not blacklisted
         nomatch = [ip for ip in ip_addrs if ip not in found]
@@ -280,7 +311,7 @@ class ProcessBL:
             else:
                 resp.raise_for_status()
         except Exception as err:
-            print(f"[error] {err}\n")
+            print(f"[Error] {err}\n")
 
     @staticmethod
     def whois_ip(ip_addr):

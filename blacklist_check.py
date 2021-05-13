@@ -8,8 +8,6 @@ from configparser import ConfigParser
 import datetime
 from ipaddress import IPv4Address
 from pathlib import Path
-import time
-import requests
 import urllib3
 
 from utils.aipdbworker import AbuseIPDB
@@ -21,7 +19,7 @@ from utils.urlscworker import URLScan
 from utils.vtworker import VirusTotal
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.2.0"
+__version__ = "v0.2.1"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -239,14 +237,5 @@ if __name__ == "__main__":
     if not sys.version_info.major == 3 and sys.version_info.minor >= 8:
         print("Python 3.8 or higher is required.")
         sys.exit(f"Your Python Version: {sys.version_info.major}.{sys.version_info.minor}")
-
-    # check if new version is available
-    try:
-        latest = requests.get(f"https://api.github.com/repos/dfirsec/{parent.stem}/releases/latest").json()["tag_name"]
-
-        if latest != __version__:
-            print(f"{Tc.yellow}* Release {latest} of {parent.stem} is available{Tc.rst}")
-    except Exception as err:
-        print(f"{Tc.error} [Error]{Tc.rst} {err}\n")
     
     main()
