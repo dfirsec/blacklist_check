@@ -20,8 +20,9 @@ class VirusTotal:
     def vt_connect(url):
         try:
             resp = requests.get(url, timeout=5)
-            if resp.status_code == 401:
-                sys.exit("[error] Invalid API key.")
+            errors = [401, 403]
+            if resp.status_code in errors:
+                sys.exit(f"{Tc.error} [error] Invalid API key{Tc.rst}")
             if resp.status_code != 200:
                 print(f" {Tc.error} {Tc.gray} {resp.status_code} {responses[resp.status_code]}{url}{Tc.rst}")
             else:

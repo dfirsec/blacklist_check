@@ -229,6 +229,8 @@ class ProcessBL:
                             found.append(ip)
                 except ValueError:
                     print(f"{Tc.warning} {'INVALID IP':12} {ip}")
+                except KeyboardInterrupt:
+                    sys.exit()
                 except TypeError:
                     continue
 

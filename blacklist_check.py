@@ -5,9 +5,10 @@ import urllib.error
 import urllib.request
 import warnings
 from configparser import ConfigParser
+import datetime
 from ipaddress import IPv4Address
 from pathlib import Path
-
+import time
 import requests
 import urllib3
 
@@ -81,7 +82,7 @@ def check_apikey(name, query_type):
 
     # verify api key
     if not config.get(f"{name}", "api_key"):
-        sys.exit(f"Please add {name} API key to the 'settings.cfg' file")
+        print(f"Please add {name} API key to the 'settings.cfg' file")
     else:
         api_key = config.get(f"{name}", "api_key")
         name = query_type(api_key)
@@ -104,7 +105,14 @@ def main():
     if not blklist.exists() or os.stat(blklist).st_size == 0:
         print(f"{Tc.yellow}Blacklist file is missing...{Tc.rst}\n")
         pbl.update_list()
-
+        
+    # check if file is older than 7 days
+    today = datetime.datetime.today()
+    filetime = datetime.datetime.fromtimestamp(blklist.stat().st_mtime) - today
+    
+    if filetime.days <= -7:
+        print(f"{Tc.yellow}[!] Blacklist file is older than 7days -- recommend updating{Tc.rst}")
+    
     if args.query:
         ip_addrs = []
         for arg in args.query:
@@ -133,17 +141,26 @@ def main():
             # VirusTotal Query
             if args.vt_query:
                 print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")
-                check_apikey("virustotal", VirusTotal).vt_run(ip_addrs)
+                try:
+                    check_apikey("virustotal", VirusTotal).vt_run(ip_addrs)
+                except Exception:
+                    pass
 
             # AbuseIPDB
             if args.aipdb_query:
                 print(f"\n{Tc.dotsep}\n{Tc.green}[ AbuseIPDB Check ]{Tc.rst}")
-                check_apikey("abuseipdb", AbuseIPDB).aipdb_run(ip_addrs)
+                try:
+                    check_apikey("abuseipdb", AbuseIPDB).aipdb_run(ip_addrs)
+                except Exception:
+                    pass
 
             # Shodan
             if args.shodan_query:
                 print(f"\n{Tc.dotsep}\n{Tc.green}[ Shodan Check ]{Tc.rst}")
-                check_apikey("shodan", ShodanIP).shodan_run(ip_addrs)
+                try:
+                    check_apikey("shodan", ShodanIP).shodan_run(ip_addrs)
+                except Exception:
+                    pass
 
     if args.file:
         pbl.outdated()
@@ -231,5 +248,5 @@ if __name__ == "__main__":
             print(f"{Tc.yellow}* Release {latest} of {parent.stem} is available{Tc.rst}")
     except Exception as err:
         print(f"{Tc.error} [Error]{Tc.rst} {err}\n")
-
+    
     main()
