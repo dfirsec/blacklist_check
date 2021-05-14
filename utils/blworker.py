@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import platform
-import random
 import re
 import sys
 import time
@@ -54,22 +53,6 @@ coloredlogs.install(
 
 class ProcessBL:
     @staticmethod
-    def headers():
-        ua_list = [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.66",
-            "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.38 Safari/537.36",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9",
-            "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/43.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
-            "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36",
-            "Mozilla/5.0 (X11; Linux i686; rv:30.0) Gecko/20100101 Firefox/42.0",
-            "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1",
-        ]
-        use_headers = {"user-agent": random.choice(ua_list)}
-        return use_headers
-
-    @staticmethod
     def clr_scrn():
         if platform.system() == "Windows":
             os.system("cls")
@@ -78,16 +61,20 @@ class ProcessBL:
 
     async def fetch(self, url):
         async with httpx.AsyncClient(verify=False) as client:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
+            }
             try:
-                resp = await client.get(url, timeout=10.0, headers=self.headers())
+                resp = await client.get(url, timeout=10.0, headers=headers)
                 resp.raise_for_status()
-                return resp.text
             except httpx.TimeoutException:
                 print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")
             except httpx.RequestError:
                 print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")
             except httpx.HTTPStatusError:
                 print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")
+            else:
+                return resp.text
 
     def get_feeds(self, feed):
         ipv4 = re.compile(r"(?![0])\d+\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
@@ -100,7 +87,7 @@ class ProcessBL:
 
     @staticmethod
     def read_list():
-        """ Returns the name and url for each feed """
+        """Returns the name and url for each feed"""
         with open(feeds) as json_file:
             data = json.load(json_file)
             return [[name, url] for name, url in data["Blacklist Feeds"].items()]
@@ -116,7 +103,7 @@ class ProcessBL:
                 continue
 
     def list_count(self):
-        """ Returns a count of IP addresses for each feed """
+        """Returns a count of IP addresses for each feed"""
         try:
             with open(blklist) as json_file:
                 data = json.load(json_file)
@@ -130,7 +117,7 @@ class ProcessBL:
             self.outdated()
 
     def update_list(self):
-        """ Updates the feed list with latest IP addresses """
+        """Updates the feed list with latest IP addresses"""
         bl_dict = dict()
         print(f"{Tc.green}[ Updating ]{Tc.rst}")
         with open(blklist, "w") as json_file:
@@ -150,7 +137,7 @@ class ProcessBL:
             json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)
 
     def add_feed(self, feed, url):
-        """ Manually add feed """
+        """Manually add feed"""
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["Blacklist Feeds"]
@@ -176,7 +163,7 @@ class ProcessBL:
 
     @staticmethod
     def remove_feed():
-        """ Remove a feed item """
+        """Remove a feed item"""
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["Blacklist Feeds"]
@@ -210,6 +197,7 @@ class ProcessBL:
         qf = ContactFinder()
 
         def bls_worker(json_list, list_name, list_type):
+            """Checks IP against several blacklists"""
             global name, ip
             with open(json_list) as json_file:
                 ip_list = json.load(json_file)
@@ -236,6 +224,7 @@ class ProcessBL:
                     continue
 
         def scs_worker(json_list, list_name, list_type):
+            """Performs a check against known internet scanners"""
             global ip
             with open(json_list) as json_file:
                 ip_list = json.load(json_file)
@@ -264,7 +253,7 @@ class ProcessBL:
                 print(f"\n{list_type} [{ip}] > {Tc.yellow}Cloudflare-Tenable{Tc.rst}")
                 if ip not in found:
                     found.append(ip)
-    
+
         # Compare and find blacklist matches
         bls_worker(blklist, "Blacklists", Tc.blacklisted)
 
@@ -286,13 +275,13 @@ class ProcessBL:
 
     @staticmethod
     def modified_date(_file):
-        """ Returns the last modified date, or last download """
+        """Returns the last modified date, or last download"""
         lastmod = os.stat(_file).st_mtime
         return datetime.strptime(time.ctime(lastmod), "%a %b %d %H:%M:%S %Y")
 
     @staticmethod
     def geo_locate(ip_addr):
-        """ Returns IP address geolocation """
+        """Returns IP address geolocation"""
         try:
             url = f"https://freegeoip.live/json/{ip_addr}"
             resp = requests.get(url)
@@ -315,14 +304,12 @@ class ProcessBL:
 
     @staticmethod
     def whois_ip(ip_addr):
-        """ Returns IP address whois information """
+        """Returns IP address whois information"""
         try:
             # ref: https://ipwhois.readthedocs.io/en/latest/RDAP.html
             obj = IPWhois(ip_addr)
             results = obj.lookup_whois()
             return results["nets"][0]["description"]
-            # results = obj.lookup_rdap(depth=1)
-            # return results["network"]["name"]
         except (exceptions.ASNRegistryError, exceptions.WhoisLookupError):
             return "No results"
         except Exception as err:
@@ -330,7 +317,7 @@ class ProcessBL:
 
     @staticmethod
     def outdated():
-        """ Checks if feed list is outdated (within last 24 hours) """
+        """Checks if feed list is outdated (within last 24 hours)"""
         try:
             file_time = os.path.getmtime(blklist)
             if (time.time() - file_time) / 3600 > 24:
