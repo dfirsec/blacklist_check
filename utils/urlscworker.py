@@ -8,7 +8,7 @@ class URLScan:
     def __init__(self):
         self.headers = {"Accept": "application/json"}
 
-    def urlsc_qry(self, ip):
+    def urlsc(self, ip):
         self.params = (
             ("q", f"domain:{''.join(ip)}"),
             ("size", 1),

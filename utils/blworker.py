@@ -20,6 +20,7 @@ from bs4 import BeautifulSoup
 from dns.exception import DNSException
 from ipwhois import IPWhois, exceptions
 from querycontacts import ContactFinder
+from requests.structures import CaseInsensitiveDict
 
 from utils.termcolors import Termcolor as Tc
 
@@ -60,10 +61,8 @@ class ProcessBL:
             os.system("clear")
 
     async def fetch(self, url):
+        headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
         async with httpx.AsyncClient(verify=False) as client:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
-            }
             try:
                 resp = await client.get(url, timeout=10.0, headers=headers)
                 resp.raise_for_status()
@@ -279,12 +278,12 @@ class ProcessBL:
         lastmod = os.stat(_file).st_mtime
         return datetime.strptime(time.ctime(lastmod), "%a %b %d %H:%M:%S %Y")
 
-    @staticmethod
-    def geo_locate(ip_addr):
+    def geo_locate(self, ip_addr):
         """Returns IP address geolocation"""
+        headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
         try:
             url = f"https://freegeoip.live/json/{ip_addr}"
-            resp = requests.get(url)
+            resp = requests.get(url, headers=headers)
             if resp.status_code == 200:
                 data = json.loads(resp.content.decode("utf-8"))
                 city = data["city"]
@@ -327,11 +326,11 @@ class ProcessBL:
         else:
             return False
 
-    @staticmethod
-    def ip46_qry(ip_addr):
+    def ip46(self, ip_addr):
         ip_addr = "".join(ip_addr)
         url = f"https://ip-46.com/{ip_addr}"
-        r = requests.get(url)
+        headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
+        r = requests.get(url, headers=headers)
         soup = BeautifulSoup(r.text, features="lxml")
         metadata = soup.find("meta")
 
@@ -342,21 +341,20 @@ class ProcessBL:
         else:
             print(Tc.clean)
 
-    @staticmethod
-    def urlhaus_base(ip_addr):
-        base_url = "https://urlhaus-api.abuse.ch/v1/host/"
-        resp = requests.post(base_url, data={"host": ip_addr}, timeout=5)
+    def urlhaus(self, ip_addr):
+        url = "https://urlhaus-api.abuse.ch/v1/host/"
+        headers = CaseInsensitiveDict([("Accept", "application/json")])
+        data = {"host": ip_addr}
+        resp = requests.post(url, headers=headers, data=data).json()
 
-        if resp.status_code == 200:
-            return resp.json()
-
-    def urlhaus_qry(self, ip_addr):
         try:
-            if self.urlhaus_base(ip_addr)["query_status"] == "no_results":
+            if resp["query_status"] == "no_results":
                 print(Tc.clean)
+            elif resp["query_status"] != "ok":
+                print(f"Error in query: {resp['query_status']}")
             else:
-                if self.urlhaus_base(ip_addr)["urls"]:
-                    for k in self.urlhaus_base(ip_addr)["urls"]:
+                if resp["urls"]:
+                    for k in resp["urls"]:
                         if k["url_status"] == "online":
                             print(f"Status: {Tc.red}{k['url_status'].title()}{Tc.rst}")
                             print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
@@ -371,5 +369,31 @@ class ProcessBL:
                                 print(f"Tags: {', '.join(k['tags'])}\n")
                             else:
                                 print("\n")
+        except TypeError:
+            return None
+
+    def threatfox(self, ip_addr):
+        url = "https://threatfox-api.abuse.ch/api/v1/"
+        headers = CaseInsensitiveDict([("Accept", "application/json")])
+        ip_addr = "".join(ip_addr)
+        data = {"query": "search_ioc", "search_term": ip_addr}
+        resp = requests.post(url, headers=headers, json=data).json()
+
+        try:
+            if resp["query_status"] == "no_results":
+                print(Tc.clean)
+            elif resp["query_status"] != "ok":
+                print(f"Query Error: {resp['data']}")
+            else:
+                if resp["data"]:
+                    for k in resp["data"]:
+                        print(f"Threat Type: {k['threat_type'].replace('_', ' ').title()}")
+                        print(f"IOC: {k['ioc']}")
+                        print(f"Malware: {k['malware']}")
+                        print(f"Malware Alias: {k['malware_alias']}")
+                        if k["tags"]:
+                            print(f"Tags: {', '.join(k['tags'])}\n")
+                        else:
+                            print("\n")
         except TypeError:
             return None

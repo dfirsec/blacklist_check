@@ -19,7 +19,7 @@ from utils.urlscworker import URLScan
 from utils.vtworker import VirusTotal
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.2.1"
+__version__ = "v0.2.3"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -128,13 +128,16 @@ def main():
             dbl.dnsbl_mapper(args.threads)
 
             print(f"\n{Tc.dotsep}\n{Tc.green}[ IP-46 IP Intel Check ]{Tc.rst}")
-            pbl.ip46_qry(args.query)
+            pbl.ip46(args.query)
 
             print(f"\n{Tc.dotsep}\n{Tc.green}[ URLhaus Check ]{Tc.rst}")
-            pbl.urlhaus_qry(args.query)
+            pbl.urlhaus(args.query)
+            
+            print(f"\n{Tc.dotsep}\n{Tc.green}[ Threatfox Check ]{Tc.rst}")
+            pbl.threatfox(args.query)
 
             print(f"\n{Tc.dotsep}\n{Tc.green}[ URLScan Check ]{Tc.rst}")
-            urlsc.urlsc_qry(args.query)
+            urlsc.urlsc(args.query)
 
             # VirusTotal Query
             if args.vt_query:

@@ -21,9 +21,9 @@ class VirusTotal:
         try:
             resp = requests.get(url, timeout=5)
             if resp.status_code in (401, 403):
-                sys.exit(f"{Tc.error} [Error] Invalid API key{Tc.rst}")
-            if resp.status_code != 200:
-                print(f" {Tc.error} {Tc.gray} {resp.status_code} {responses[resp.status_code]}{url}{Tc.rst}")
+                print(f"{Tc.error} [Error] Invalid API key{Tc.rst}")
+            elif resp.status_code != 200:
+                print(f" {Tc.error} {Tc.gray} {resp.status_code} {responses[resp.status_code]} {url}{Tc.rst}")
             else:
                 return resp.json()
         except (ConnectionError, HTTPError, RequestException, Timeout):
