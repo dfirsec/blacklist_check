@@ -327,6 +327,7 @@ class ProcessBL:
             return False
 
     def ip46(self, ip_addr):
+        """ Performs check against ip-46.com """
         ip_addr = "".join(ip_addr)
         url = f"https://ip-46.com/{ip_addr}"
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
@@ -342,6 +343,7 @@ class ProcessBL:
             print(Tc.clean)
 
     def urlhaus(self, ip_addr):
+        """ Performs check against urlhaus-api.abuse.ch """
         url = "https://urlhaus-api.abuse.ch/v1/host/"
         headers = CaseInsensitiveDict([("Accept", "application/json")])
         data = {"host": ip_addr}
@@ -373,6 +375,7 @@ class ProcessBL:
             return None
 
     def threatfox(self, ip_addr):
+        """ Performs check against threatfox-api.abuse.ch """
         url = "https://threatfox-api.abuse.ch/api/v1/"
         headers = CaseInsensitiveDict([("Accept", "application/json")])
         ip_addr = "".join(ip_addr)
@@ -380,7 +383,7 @@ class ProcessBL:
         resp = requests.post(url, headers=headers, json=data).json()
 
         try:
-            if resp["query_status"] == "no_results":
+            if resp["query_status"] == "no_results" or resp['data'] == "Your search did not yield any results":
                 print(Tc.clean)
             elif resp["query_status"] != "ok":
                 print(f"Query Error: {resp['data']}")
