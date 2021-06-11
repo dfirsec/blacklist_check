@@ -2,6 +2,10 @@ from colorama import Fore, init
 
 
 class Termcolor:
+    """
+    Terminal Color Selector
+    """
+
     init(autoreset=True)
 
     # =colors

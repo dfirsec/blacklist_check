@@ -44,6 +44,9 @@ class DNSBL:
 
     @staticmethod
     def update_dnsbl():
+        """
+        Updates DNS Blacklist
+        """
         url = "http://multirbl.valli.org/list/"
         page = requests.get(url).text
         soup = BeautifulSoup(page, "html.parser")
@@ -61,7 +64,7 @@ class DNSBL:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["DNS Blacklists"]["DNSBL"]
 
-        """ remove contact and nszones items from list """
+        # Remove contact and nszones items from list
         patterns = ["*.nszones.com", "*contacts*"]
         for pattern in patterns:
             [alive.remove(x) for x in fnmatch.filter(alive, pattern)]
@@ -80,8 +83,11 @@ class DNSBL:
             return False
 
     def resolve_dns(self, qry):
+        """
+        DNS Resolver
+        """
         try:
-            # resolver.nameservers = ['8.8.8.8', '8.8.4.4', '1.1.1.1', '9.9.9.9']
+            self.resolver.nameservers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
             answer = self.resolver.resolve(qry, "A")
 
             return answer

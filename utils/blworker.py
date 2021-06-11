@@ -53,6 +53,10 @@ coloredlogs.install(
 
 
 class ProcessBL:
+    """
+    Blacklist Processor
+    """
+
     @staticmethod
     def clr_scrn():
         if platform.system() == "Windows":
@@ -86,13 +90,18 @@ class ProcessBL:
 
     @staticmethod
     def read_list():
-        """Returns the name and url for each feed"""
+        """
+        Returns the name and url for each feed
+        """
         with open(feeds) as json_file:
             data = json.load(json_file)
             return [[name, url] for name, url in data["Blacklist Feeds"].items()]
 
     @staticmethod
     def sort_list(data):
+        """
+        Sorts lists by name and count
+        """
         sort_name = sorted((name, ip_cnt) for (name, ip_cnt) in data["Blacklists"].items())
         for n, i in enumerate(sort_name, start=1):
             try:
@@ -102,7 +111,9 @@ class ProcessBL:
                 continue
 
     def list_count(self):
-        """Returns a count of IP addresses for each feed"""
+        """
+        Returns a count of IP addresses for each feed
+        """
         try:
             with open(blklist) as json_file:
                 data = json.load(json_file)
@@ -116,7 +127,9 @@ class ProcessBL:
             self.outdated()
 
     def update_list(self):
-        """Updates the feed list with latest IP addresses"""
+        """
+        Updates the feed list with latest IP addresses
+        """
         bl_dict = dict()
         print(f"{Tc.green}[ Updating ]{Tc.rst}")
         with open(blklist, "w") as json_file:
@@ -136,7 +149,9 @@ class ProcessBL:
             json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)
 
     def add_feed(self, feed, url):
-        """Manually add feed"""
+        """
+        Manually add feed
+        """
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["Blacklist Feeds"]
@@ -162,7 +177,9 @@ class ProcessBL:
 
     @staticmethod
     def remove_feed():
-        """Remove a feed item"""
+        """
+        Remove a feed item
+        """
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["Blacklist Feeds"]
@@ -196,7 +213,9 @@ class ProcessBL:
         qf = ContactFinder()
 
         def bls_worker(json_list, list_name, list_type):
-            """Checks IP against several blacklists"""
+            """
+            Checks IP against several blacklists
+            """
             global name, ip
             with open(json_list) as json_file:
                 ip_list = json.load(json_file)
@@ -215,6 +234,7 @@ class ProcessBL:
 
                         if ip not in found:
                             found.append(ip)
+
                 except ValueError:
                     print(f"{Tc.warning} {'INVALID IP':12} {ip}")
                 except KeyboardInterrupt:
@@ -223,7 +243,9 @@ class ProcessBL:
                     continue
 
         def scs_worker(json_list, list_name, list_type):
-            """Performs a check against known internet scanners"""
+            """
+            Performs a check against known internet scanners
+            """
             global ip
             with open(json_list) as json_file:
                 ip_list = json.load(json_file)
@@ -257,7 +279,6 @@ class ProcessBL:
         bls_worker(blklist, "Blacklists", Tc.blacklisted)
 
         # Compare and find scanner matches
-        # ref: https://wiki.ipfire.org/configuration/firewall/blockshodan
         scs_worker(scnrs, "Scanners", Tc.scanner)
 
         # if not blacklisted
@@ -274,12 +295,16 @@ class ProcessBL:
 
     @staticmethod
     def modified_date(_file):
-        """Returns the last modified date, or last download"""
+        """
+        Returns the last modified date, or last download
+        """
         lastmod = os.stat(_file).st_mtime
         return datetime.strptime(time.ctime(lastmod), "%a %b %d %H:%M:%S %Y")
 
     def geo_locate(self, ip_addr):
-        """Returns IP address geolocation"""
+        """
+        Returns IP address geolocation
+        """
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
         try:
             url = f"https://freegeoip.live/json/{ip_addr}"
@@ -303,7 +328,9 @@ class ProcessBL:
 
     @staticmethod
     def whois_ip(ip_addr):
-        """Returns IP address whois information"""
+        """
+        Returns IP address whois information
+        """
         try:
             # ref: https://ipwhois.readthedocs.io/en/latest/RDAP.html
             obj = IPWhois(ip_addr)
@@ -316,7 +343,9 @@ class ProcessBL:
 
     @staticmethod
     def outdated():
-        """Checks if feed list is outdated (within last 24 hours)"""
+        """
+        Checks if feed list is outdated (within last 24 hours)
+        """
         try:
             file_time = os.path.getmtime(blklist)
             if (time.time() - file_time) / 3600 > 24:
@@ -327,7 +356,9 @@ class ProcessBL:
             return False
 
     def ip46(self, ip_addr):
-        """ Performs check against ip-46.com """
+        """
+        Performs check against ip-46.com
+        """
         ip_addr = "".join(ip_addr)
         url = f"https://ip-46.com/{ip_addr}"
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
@@ -343,7 +374,9 @@ class ProcessBL:
             print(Tc.clean)
 
     def urlhaus(self, ip_addr):
-        """ Performs check against urlhaus-api.abuse.ch """
+        """
+        Performs check against urlhaus-api.abuse.ch
+        """
         url = "https://urlhaus-api.abuse.ch/v1/host/"
         headers = CaseInsensitiveDict([("Accept", "application/json")])
         data = {"host": ip_addr}
@@ -375,7 +408,9 @@ class ProcessBL:
             return None
 
     def threatfox(self, ip_addr):
-        """ Performs check against threatfox-api.abuse.ch """
+        """
+        Performs check against threatfox-api.abuse.ch
+        """
         url = "https://threatfox-api.abuse.ch/api/v1/"
         headers = CaseInsensitiveDict([("Accept", "application/json")])
         ip_addr = "".join(ip_addr)
@@ -383,7 +418,7 @@ class ProcessBL:
         resp = requests.post(url, headers=headers, json=data).json()
 
         try:
-            if resp["query_status"] == "no_results" or resp['data'] == "Your search did not yield any results":
+            if resp["query_status"] == "no_results" or resp["data"] == "Your search did not yield any results":
                 print(Tc.clean)
             elif resp["query_status"] != "ok":
                 print(f"Query Error: {resp['data']}")

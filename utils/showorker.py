@@ -6,6 +6,10 @@ from utils.termcolors import Termcolor as Tc
 
 
 class ShodanIP:
+    """
+    Performs check against shodan
+    """
+
     def __init__(self, api_key):
         self.api_key = api_key
         if self.api_key is None:

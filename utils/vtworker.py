@@ -9,6 +9,10 @@ from utils.termcolors import Termcolor as Tc
 
 
 class VirusTotal:
+    """
+    Performs check against urlscan.io
+    """
+
     def __init__(self, api_key=None):
         self.api_key = api_key
         self.base_url = f"https://www.virustotal.com/vtapi/v2/ip-address/report?apikey="
@@ -55,7 +59,7 @@ class VirusTotal:
                         print(f"{Tc.red}>{Tc.rst} {k['sha256']}")
                         print(f"  Positives: {k['positives']}")
                         print(f"  Date: {k['date']}\n")
-                
+
             except KeyError:
                 pass
         elif json_resp["response_code"] == 0:

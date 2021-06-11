@@ -5,6 +5,10 @@ from utils.termcolors import Termcolor as Tc
 
 
 class URLScan:
+    """
+    Performs check against urlscan.io
+    """
+
     def __init__(self):
         self.headers = {"Accept": "application/json"}
 

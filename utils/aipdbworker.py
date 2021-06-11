@@ -1,13 +1,16 @@
 import sys
 
 import requests
-from requests.exceptions import (ConnectionError, HTTPError, RequestException,
-                                 Timeout)
+from requests.exceptions import ConnectionError, HTTPError, RequestException, Timeout
 
 from utils.termcolors import Termcolor as Tc
 
 
 class AbuseIPDB:
+    """
+    Performs check against abuseipdb.com
+    """
+
     def __init__(self, api_key):
         self.api_key = api_key
         self.headers = {"Key": api_key, "Accept": "application/json"}
@@ -15,7 +18,7 @@ class AbuseIPDB:
             sys.exit(f"{Tc.yellow}* Verify that you have provided your API key{Tc.rst}")
 
     def aipdb_run(self, ip):
-        self.params = ("ipAddress", ip),
+        self.params = (("ipAddress", ip),)
         self.base_url = f"https://api.abuseipdb.com/api/v2/check"
         try:
             resp = requests.get(self.base_url, headers=self.headers, params=self.params).json()

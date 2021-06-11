@@ -19,7 +19,7 @@ from utils.urlscworker import URLScan
 from utils.vtworker import VirusTotal
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.2.3"
+__version__ = "v0.2.4"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -74,7 +74,9 @@ def parser():
 
 
 def check_apikey(name, query_type):
-    # ---[ Configuration Parser ]---
+    """
+    Configuration Parser
+    """
     config = ConfigParser()
     config.read(settings)
 
@@ -103,14 +105,14 @@ def main():
     if not blklist.exists() or os.stat(blklist).st_size == 0:
         print(f"{Tc.yellow}Blacklist file is missing...{Tc.rst}\n")
         pbl.update_list()
-        
+
     # check if file is older than 7 days
     today = datetime.datetime.today()
     filetime = datetime.datetime.fromtimestamp(blklist.stat().st_mtime) - today
-    
+
     if filetime.days <= -7:
         print(f"{Tc.yellow}[!] Blacklist file is older than 7days -- recommend updating{Tc.rst}")
-    
+
     if args.query:
         ip_addrs = []
         for arg in args.query:
@@ -132,7 +134,7 @@ def main():
 
             print(f"\n{Tc.dotsep}\n{Tc.green}[ URLhaus Check ]{Tc.rst}")
             pbl.urlhaus(args.query)
-            
+
             print(f"\n{Tc.dotsep}\n{Tc.green}[ Threatfox Check ]{Tc.rst}")
             pbl.threatfox(args.query)
 
@@ -201,7 +203,14 @@ def main():
             if feed and url:
                 print(f"[*] Checking URL{Tc.rst}")
                 try:
+                    if url.lower().startswith('http'):
+                        urllib.request.urlopen(url, timeout=3)
+                    else:
+                        raise ValueError from None
                     urllib.request.urlopen(url, timeout=3)
+                except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
+                    print(f"{Tc.error} URL '{url}' appears to be invalid or inaccessible.")
+                else:
                     print(f"[*] URL is good")
                     confirm = input(
                         f"[?] Insert the following feed? \nName: {feed} | URL: {url} {Tc.yellow}(Y/n){Tc.rst}: "
@@ -211,9 +220,6 @@ def main():
                     else:
                         sys.exit(f"[!] Request canceled")
                     break
-
-                except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
-                    print(f"{Tc.error} URL '{url}' appears to be invalid or inaccessible.")
             else:
                 sys.exit(f"{Tc.error} Please include the feed name and url.")
 
@@ -240,5 +246,5 @@ if __name__ == "__main__":
     if not sys.version_info.major == 3 and sys.version_info.minor >= 8:
         print("Python 3.8 or higher is required.")
         sys.exit(f"Your Python Version: {sys.version_info.major}.{sys.version_info.minor}")
-    
+
     main()
