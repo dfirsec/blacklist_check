@@ -149,7 +149,7 @@ class DNSBL:
     def dnsbl_mapper(self, threads=None):
         with open(feeds) as json_file:
             data = json.load(json_file)
-        dnsbl = [url for url in data["DNS Blacklists"]["DNSBL"]]
+        dnsbl = list(data["DNS Blacklists"]["DNSBL"])
 
         with ThreadPoolExecutor(max_workers=threads) as executor:
             executor.map(self.dnsbl_query, dnsbl)
