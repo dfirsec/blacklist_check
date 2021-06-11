@@ -130,7 +130,7 @@ class ProcessBL:
         """
         Updates the feed list with latest IP addresses
         """
-        bl_dict = dict()
+        bl_dict = {}
         print(f"{Tc.green}[ Updating ]{Tc.rst}")
         with open(blklist, "w") as json_file:
             bl_dict["Blacklists"] = {}
