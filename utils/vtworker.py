@@ -15,7 +15,7 @@ class VirusTotal:
 
     def __init__(self, api_key=None):
         self.api_key = api_key
-        self.base_url = f"https://www.virustotal.com/vtapi/v2/ip-address/report?apikey="
+        self.base_url = "https://www.virustotal.com/vtapi/v2/ip-address/report?apikey="
         if self.api_key is None:
             sys.exit(f"{Tc.yellow}* Verify that you have provided your API key{Tc.rst}")
 

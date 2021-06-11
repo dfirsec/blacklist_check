@@ -211,14 +211,14 @@ def main():
                 except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
                     print(f"{Tc.error} URL '{url}' appears to be invalid or inaccessible.")
                 else:
-                    print(f"[*] URL is good")
+                    print("[*] URL is good")
                     confirm = input(
                         f"[?] Insert the following feed? \nName: {feed} | URL: {url} {Tc.yellow}(Y/n){Tc.rst}: "
                     )
                     if confirm.lower() == "y":
                         pbl.add_feed(feed=feed.replace(",", ""), url=url.replace(",", ""))
                     else:
-                        sys.exit(f"[!] Request canceled")
+                        sys.exit("[!] Request canceled")
                     break
             else:
                 sys.exit(f"{Tc.error} Please include the feed name and url.")

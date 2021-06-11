@@ -19,7 +19,7 @@ class AbuseIPDB:
 
     def aipdb_run(self, ip):
         self.params = (("ipAddress", ip),)
-        self.base_url = f"https://api.abuseipdb.com/api/v2/check"
+        self.base_url = "https://api.abuseipdb.com/api/v2/check"
         try:
             resp = requests.get(self.base_url, headers=self.headers, params=self.params).json()
         except (ConnectionError, HTTPError, RequestException, Timeout):

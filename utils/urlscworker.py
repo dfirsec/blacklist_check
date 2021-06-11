@@ -17,7 +17,7 @@ class URLScan:
             ("q", f"domain:{''.join(ip)}"),
             ("size", 1),
         )
-        self.base_url = f"https://urlscan.io/api/v1/search/"
+        self.base_url = "https://urlscan.io/api/v1/search/"
         try:
             resp = requests.get(self.base_url, headers=self.headers, params=self.params).json()
         except (ConnectionError, HTTPError, RequestException, Timeout):
