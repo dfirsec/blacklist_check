@@ -321,8 +321,7 @@ class ProcessBL:
                 if city:
                     return f"{city}, {country} ({iso_code})"
                 return f"{country} ({iso_code})"
-            else:
-                resp.raise_for_status()
+            resp.raise_for_status()
         except Exception as err:
             print(f"[Error] {err}\n")
 
