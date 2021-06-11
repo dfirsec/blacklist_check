@@ -301,7 +301,8 @@ class ProcessBL:
         lastmod = os.stat(_file).st_mtime
         return datetime.strptime(time.ctime(lastmod), "%a %b %d %H:%M:%S %Y")
 
-    def geo_locate(self, ip_addr):
+    @staticmethod
+    def geo_locate(ip_addr):
         """
         Returns IP address geolocation
         """
@@ -355,7 +356,8 @@ class ProcessBL:
         else:
             return False
 
-    def ip46(self, ip_addr):
+    @staticmethod
+    def ip46(ip_addr):
         """
         Performs check against ip-46.com
         """
@@ -373,7 +375,8 @@ class ProcessBL:
         else:
             print(Tc.clean)
 
-    def urlhaus(self, ip_addr):
+    @staticmethod
+    def urlhaus(ip_addr):
         """
         Performs check against urlhaus-api.abuse.ch
         """
@@ -407,7 +410,8 @@ class ProcessBL:
         except TypeError:
             return None
 
-    def threatfox(self, ip_addr):
+    @staticmethod
+    def threatfox(ip_addr):
         """
         Performs check against threatfox-api.abuse.ch
         """
