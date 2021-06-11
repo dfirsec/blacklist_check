@@ -141,7 +141,7 @@ class ProcessBL:
             # Remove duplicate IP addresses and update
             for name in bl_dict["Blacklists"]:
                 try:
-                    cleanup = list({ip for ip in bl_dict["Blacklists"][name]})
+                    cleanup = list(set(bl_dict["Blacklists"][name]))
                     bl_dict["Blacklists"].update({name: cleanup})
                 except TypeError:
                     continue
@@ -251,14 +251,14 @@ class ProcessBL:
                 ip_list = json.load(json_file)
 
             # single ip addresses
-            shodan = [ip for ip in ip_list[list_name]["Shodan"]]
+            shodan = list(ip_list[list_name]["Shodan"])
             s_matches = set(ip_addrs) & set(shodan)
             for ip in s_matches:
                 print(f"\n{list_type} [{ip}] > {Tc.yellow}Shodan{Tc.rst}")
                 if ip not in found:
                     found.append(ip)
 
-            proj25499 = [ip for ip in ip_list[list_name]["Project 25499"]]
+            proj25499 = list(ip_list[list_name]["Project 25499"])
             p_matches = set(ip_addrs) & set(proj25499)
             for ip in p_matches:
                 print(f"\n{list_type} [{ip}] > {Tc.yellow}Project 25499{Tc.rst}")
@@ -266,7 +266,7 @@ class ProcessBL:
                     found.append(ip)
 
             # networks
-            tenable = [net for net in ip_list[list_name]["Cloudflare-Tenable"]]
+            tenable = list(ip_list[list_name]["Cloudflare-Tenable"])
             t_matches = [
                 ip for ip in ip_addrs for net in tenable if ipaddress.ip_address(ip) in ipaddress.ip_network(net)
             ]
