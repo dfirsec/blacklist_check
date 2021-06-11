@@ -318,10 +318,9 @@ class ProcessBL:
                 iso_code = data["country_code"]
                 if city and state and iso_code and city != state:
                     return f"{city}, {state} ({iso_code})"
-                elif city:
+                if city:
                     return f"{city}, {country} ({iso_code})"
-                else:
-                    return f"{country} ({iso_code})"
+                return f"{country} ({iso_code})"
             else:
                 resp.raise_for_status()
         except Exception as err:
@@ -372,8 +371,7 @@ class ProcessBL:
         if "No abuse detected" not in detection:
             print(". ".join(metadata["content"].split(". ")[0:2]).split("IP-46.com", 1)[0])
             return detection
-        else:
-            print(Tc.clean)
+        print(Tc.clean)
 
     @staticmethod
     def urlhaus(ip_addr):
