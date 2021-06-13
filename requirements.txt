@@ -1,0 +1,11 @@
+beautifulsoup4
+colorama
+coloredlogs
+httpx
+ipwhois
+lxml
+querycontacts
+requests
+shodan
+trio
+verboselogs
