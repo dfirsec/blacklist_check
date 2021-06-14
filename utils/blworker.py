@@ -211,6 +211,8 @@ class ProcessBL:
     def ip_matches(self, ip_addrs):
         found = []
         qf = ContactFinder()
+        
+        print(f"\n{Tc.dotsep}\n{Tc.green}[ Local Blacklist Check ]{Tc.rst}")
 
         def bls_worker(json_list, list_name, list_type):
             """
@@ -279,7 +281,6 @@ class ProcessBL:
 
         # if not blacklisted
         nomatch = [ip for ip in ip_addrs if ip not in found]
-        print(f"\n{Tc.dotsep}\n{Tc.green}[ Local Blacklist Check ]{Tc.rst}")
         if nomatch:
             for ip in nomatch:
                 print(f"{Tc.clean}{Tc.rst} [{ip}]")
