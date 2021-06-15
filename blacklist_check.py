@@ -34,7 +34,7 @@ urllib3.disable_warnings()
 parent = Path(__file__).resolve().parent
 blklist = parent.joinpath("resc/blacklist.json")
 feeds = parent.joinpath("resc/feeds.json")
-settings = parent.joinpath("settings.cfg")
+settings = parent.joinpath("settings.ini")
 
 
 def parser():
@@ -83,7 +83,7 @@ def check_apikey(name, query_type):
 
     # verify api key
     if not config.get(f"{name}", "api_key"):
-        print(f"Please add {name} API key to the 'settings.cfg' file")
+        print(f"Please add {name} api key to the '{settings.name}' file")
     else:
         api_key = config.get(f"{name}", "api_key")
         name = query_type(api_key)
