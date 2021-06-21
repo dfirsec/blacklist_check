@@ -65,7 +65,7 @@ class ProcessBL:
             os.system("clear")
 
     async def fetch(self, url):
-        headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
+        headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/89.0"}
         async with httpx.AsyncClient(verify=False) as client:
             try:
                 resp = await client.get(url, timeout=10.0, headers=headers)
