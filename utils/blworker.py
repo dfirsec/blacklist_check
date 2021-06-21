@@ -65,7 +65,9 @@ class ProcessBL:
             os.system("clear")
 
     async def fetch(self, url):
-        headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/89.0"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/89.0"
+        }
         async with httpx.AsyncClient(verify=False) as client:
             try:
                 resp = await client.get(url, timeout=10.0, headers=headers)
@@ -102,12 +104,16 @@ class ProcessBL:
         """
         Sorts lists by name and count
         """
-        sort_name = sorted((name, ip_cnt) for (name, ip_cnt) in data["Blacklists"].items())
+        sort_name = sorted(
+            (name, ip_cnt) for (name, ip_cnt) in data["Blacklists"].items()
+        )
         for n, i in enumerate(sort_name, start=1):
             try:
                 print(f"{Tc.cyan}{n:2}){Tc.rst} {i[0]:23}: {len(i[1]):<6,}")
             except TypeError:
-                print(f"{Tc.cyan}{n:2}){Tc.rst} {i[0]:23}: {Tc.gray}[DOWNLOAD error]{Tc.rst}")
+                print(
+                    f"{Tc.cyan}{n:2}){Tc.rst} {i[0]:23}: {Tc.gray}[DOWNLOAD error]{Tc.rst}"
+                )
                 continue
 
     def list_count(self):
@@ -173,7 +179,9 @@ class ProcessBL:
             with open(blklist, "w") as json_file:
                 json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)
 
-            print(f"{Tc.success} {Tc.yellow}{len(bl_list[feed]):,}{Tc.rst} IPs added to '{feed}'")
+            print(
+                f"{Tc.success} {Tc.yellow}{len(bl_list[feed]):,}{Tc.rst} IPs added to '{feed}'"
+            )
 
     @staticmethod
     def remove_feed():
@@ -187,7 +195,9 @@ class ProcessBL:
                 print(f"{Tc.cyan}{n:2}){Tc.rst} {k:25}{v}")
         try:
             # remove from feeds
-            opt = int(input("\nPlease select your choice by number, or Ctrl-C to cancel: "))
+            opt = int(
+                input("\nPlease select your choice by number, or Ctrl-C to cancel: ")
+            )
             opt = opt - 1  # subtract 1 as enumerate starts at 1
             choice = list(feed_list)[opt]
             del feed_list[choice]
@@ -211,7 +221,7 @@ class ProcessBL:
     def ip_matches(self, ip_addrs):
         found = []
         qf = ContactFinder()
-        
+
         print(f"\n{Tc.dotsep}\n{Tc.green}[ Local Blacklist Check ]{Tc.rst}")
 
         def bls_worker(json_list, list_name, list_type):
@@ -226,10 +236,14 @@ class ProcessBL:
                     matches = set(ip_addrs) & set(item)
                     for ip in matches:
                         print(f"\n{list_type} [{ip}] > {Tc.yellow}{name}{Tc.rst}")
-                        print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")
+                        print(
+                            f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}"
+                        )
                         print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")
                         try:
-                            print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
+                            print(
+                                f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n"
+                            )
                         except DNSException:
                             pass
 
@@ -266,7 +280,10 @@ class ProcessBL:
             # networks
             tenable = list(ip_list[list_name]["Cloudflare-Tenable"])
             t_matches = [
-                ip for ip in ip_addrs for net in tenable if ipaddress.ip_address(ip) in ipaddress.ip_network(net)
+                ip
+                for ip in ip_addrs
+                for net in tenable
+                if ipaddress.ip_address(ip) in ipaddress.ip_network(net)
             ]
             for ip in set(t_matches):
                 print(f"\n{list_type} [{ip}] > {Tc.yellow}Cloudflare-Tenable{Tc.rst}")
@@ -284,10 +301,15 @@ class ProcessBL:
         if nomatch:
             for ip in nomatch:
                 print(f"{Tc.clean}{Tc.rst} [{ip}]")
-                print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}", end="\n")
+                print(
+                    f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}",
+                    end="\n",
+                )
                 print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")
                 try:
-                    print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
+                    print(
+                        f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n"
+                    )
                 except DNSException:
                     pass
 
@@ -304,7 +326,9 @@ class ProcessBL:
         """
         Returns IP address geolocation
         """
-        headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"
+        }
         try:
             url = f"https://freegeoip.live/json/{ip_addr}"
             resp = requests.get(url, headers=headers)
@@ -341,7 +365,9 @@ class ProcessBL:
             if results["asn_description"] and "NA" not in results["asn_description"]:
                 contact = results["asn_description"]
             else:
-                contact = results["objects"][entity]["contact"]["address"][0]["value"].replace("\r\n", ", ")
+                contact = results["objects"][entity]["contact"]["address"][0][
+                    "value"
+                ].replace("\r\n", ", ")
             return contact.replace("\n", ", ")
 
     @staticmethod
@@ -365,14 +391,18 @@ class ProcessBL:
         """
         ip_addr = "".join(ip_addr)
         url = f"https://ip-46.com/{ip_addr}"
-        headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"
+        }
         r = requests.get(url, headers=headers)
         soup = BeautifulSoup(r.text, features="lxml")
         metadata = soup.find("meta")
 
         detection = soup.title.get_text()
         if "No abuse detected" not in detection:
-            print(". ".join(metadata["content"].split(". ")[0:2]).split("IP-46.com", 1)[0])
+            print(
+                ". ".join(metadata["content"].split(". ")[0:2]).split("IP-46.com", 1)[0]
+            )
             return detection
         print(Tc.clean)
 
@@ -396,14 +426,18 @@ class ProcessBL:
                     for k in resp["urls"]:
                         if k["url_status"] == "online":
                             print(f"Status: {Tc.red}{k['url_status'].title()}{Tc.rst}")
-                            print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
+                            print(
+                                f"{k['threat'].replace('_', ' ').title():12}: {k['url']}"
+                            )
                             if k["tags"]:
                                 print(f"Tags: {', '.join(k['tags'])}\n")
                             else:
                                 print("\n")
                         else:
                             print(f"Status: {k['url_status'].title()}")
-                            print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
+                            print(
+                                f"{k['threat'].replace('_', ' ').title():12}: {k['url']}"
+                            )
                             if k["tags"]:
                                 print(f"Tags: {', '.join(k['tags'])}\n")
                             else:
@@ -423,14 +457,19 @@ class ProcessBL:
         resp = requests.post(url, headers=headers, json=data).json()
 
         try:
-            if resp["query_status"] == "no_results" or resp["data"] == "Your search did not yield any results":
+            if (
+                resp["query_status"] == "no_results"
+                or resp["data"] == "Your search did not yield any results"
+            ):
                 print(Tc.clean)
             elif resp["query_status"] != "ok":
                 print(f"Query Error: {resp['data']}")
             else:
                 if resp["data"]:
                     for k in resp["data"]:
-                        print(f"Threat Type: {k['threat_type'].replace('_', ' ').title()}")
+                        print(
+                            f"Threat Type: {k['threat_type'].replace('_', ' ').title()}"
+                        )
                         print(f"IOC: {k['ioc']}")
                         print(f"Malware: {k['malware']}")
                         print(f"Malware Alias: {k['malware_alias']}")

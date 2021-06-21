@@ -21,7 +21,7 @@ class AbuseIPDB:
         headers = {"Key": self.api_key, "Accept": "application/json"}
         base_url = "https://api.abuseipdb.com/api/v2/check"
         params = (("ipAddress", ip),)
-        
+
         try:
             resp = requests.get(base_url, headers=headers, params=params).json()
         except (HTTPError, RequestException, Timeout):
