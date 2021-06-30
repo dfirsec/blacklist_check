@@ -1,6 +1,6 @@
 # IP Blacklist Check
 
-[!Generic badge](https://img.shields.io/badge/python-3.7-blue.svg) [![Twitter](https://img.shields.io/badge/Twitter-@pulsecode-blue.svg)](https://twitter.com/pulsecode)
+![Generic badge](https://img.shields.io/badge/python-3.7-blue.svg) [![Twitter](https://img.shields.io/badge/Twitter-@pulsecode-blue.svg)](https://twitter.com/pulsecode)
 
 Python script that downloads IP reputation blacklists from various sources and queries an IP address, or multiple IPs, against those lists. Utilizes the FreeGeopIP Live service for IP geolocation - ref: <https://freegeoip.live/>
 
