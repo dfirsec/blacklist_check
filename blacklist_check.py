@@ -46,7 +46,7 @@ def parser():
     group1 = p.add_mutually_exclusive_group()
     group2 = p.add_mutually_exclusive_group()
 
-    p.add_argument(
+    parser.add_argument(
         "-t",
         dest="threads",
         nargs="?",
