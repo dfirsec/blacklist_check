@@ -23,7 +23,9 @@ class VirusTotal:
             if resp.status_code in (401, 403):
                 print(f"{Tc.error} [Error] Invalid API key{Tc.rst}")
             elif resp.status_code != 200:
-                print(f" {Tc.error} {Tc.gray} {resp.status_code} {responses[resp.status_code]} {url}{Tc.rst}")
+                print(
+                    f" {Tc.error} {Tc.gray} {resp.status_code} {responses[resp.status_code]} {url}{Tc.rst}"
+                )
             else:
                 return resp.json()
         except (HTTPError, RequestException, Timeout):
@@ -43,7 +45,9 @@ class VirusTotal:
                 elif json_resp["resolutions"]:
                     print(f"{Tc.mag}= Hostnames ={Tc.rst}")
                     for k in json_resp["resolutions"]:
-                        print(f"{Tc.red}>{Tc.rst} {k['hostname']} ({k['last_resolved']})")
+                        print(
+                            f"{Tc.red}>{Tc.rst} {k['hostname']} ({k['last_resolved']})"
+                        )
                 elif json_resp["detected_urls"]:
                     print(f"\n{Tc.mag}= URLs ={Tc.rst}")
                     for k in json_resp["detected_urls"]:

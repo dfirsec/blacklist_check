@@ -130,7 +130,11 @@ class DNSBL:
         ]
 
         try:
-            qry = ip_address(host).reverse_pointer.replace(".in-addr.arpa", "") + "." + blacklist
+            qry = (
+                ip_address(host).reverse_pointer.replace(".in-addr.arpa", "")
+                + "."
+                + blacklist
+            )
         except Exception:
             qry = host + "." + blacklist
 

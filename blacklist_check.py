@@ -56,18 +56,43 @@ def parser():
         help="threads for rbl check (default 25, max 50)",
     )
 
-    p.add_argument("-v", dest="vt_query", action="store_true", help="check virustotal for ip info")
-    p.add_argument("-a", dest="aipdb_query", action="store_true", help="check abuseipdb for ip info")
-    p.add_argument("-s", dest="shodan_query", action="store_true", help="check shodan for ip info")
+    p.add_argument(
+        "-v", dest="vt_query", action="store_true", help="check virustotal for ip info"
+    )
+    p.add_argument(
+        "-a",
+        dest="aipdb_query",
+        action="store_true",
+        help="check abuseipdb for ip info",
+    )
+    p.add_argument(
+        "-s", dest="shodan_query", action="store_true", help="check shodan for ip info"
+    )
 
-    group1.add_argument("-u", dest="update", action="store_true", help="update blacklist feeds")
-    group1.add_argument("-fu", dest="force", action="store_true", help="force update of all feeds")
-    group1.add_argument("-sh", dest="show", action="store_true", help="show blacklist feeds")
+    group1.add_argument(
+        "-u", dest="update", action="store_true", help="update blacklist feeds"
+    )
+    group1.add_argument(
+        "-fu", dest="force", action="store_true", help="force update of all feeds"
+    )
+    group1.add_argument(
+        "-sh", dest="show", action="store_true", help="show blacklist feeds"
+    )
 
-    group2.add_argument("-q", dest="query", nargs="+", metavar="query", help="query a single or multiple ip addrs")
+    group2.add_argument(
+        "-q",
+        dest="query",
+        nargs="+",
+        metavar="query",
+        help="query a single or multiple ip addrs",
+    )
 
-    group2.add_argument("-f", dest="file", metavar="file", help="query a list of ip addresses from file")
-    group2.add_argument("-i", dest="insert", action="store_true", help="insert a new blacklist feed")
+    group2.add_argument(
+        "-f", dest="file", metavar="file", help="query a list of ip addresses from file"
+    )
+    group2.add_argument(
+        "-i", dest="insert", action="store_true", help="insert a new blacklist feed"
+    )
     group2.add_argument(
         "-r",
         dest="remove",
@@ -111,7 +136,9 @@ def main():
     filetime = datetime.datetime.fromtimestamp(blklist.stat().st_mtime) - today
 
     if filetime.days <= -7:
-        print(f"{Tc.yellow}[!] Blacklist file is older than 7days -- recommend updating{Tc.rst}")
+        print(
+            f"{Tc.yellow}[!] Blacklist file is older than 7days -- recommend updating{Tc.rst}"
+        )
 
     if args.query:
         ip_addrs = []
@@ -205,14 +232,18 @@ def main():
                 try:
                     urllib.request.urlopen(url)
                 except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
-                    print(f"{Tc.error} URL '{url}' appears to be invalid or inaccessible.")
+                    print(
+                        f"{Tc.error} URL '{url}' appears to be invalid or inaccessible."
+                    )
                 else:
                     print("[*] URL is good")
                     confirm = input(
                         f"[?] Insert the following feed? \nName: {feed} | URL: {url} {Tc.yellow}(Y/n){Tc.rst}: "
                     )
                     if confirm.lower() == "y":
-                        pbl.add_feed(feed=feed.replace(",", ""), url=url.replace(",", ""))
+                        pbl.add_feed(
+                            feed=feed.replace(",", ""), url=url.replace(",", "")
+                        )
                     else:
                         sys.exit("[!] Request canceled")
                     break
@@ -241,6 +272,8 @@ if __name__ == "__main__":
     # check if python version
     if not sys.version_info.major == 3 and sys.version_info.minor >= 8:
         print("Python 3.8 or higher is required.")
-        sys.exit(f"Your Python Version: {sys.version_info.major}.{sys.version_info.minor}")
+        sys.exit(
+            f"Your Python Version: {sys.version_info.major}.{sys.version_info.minor}"
+        )
 
     main()

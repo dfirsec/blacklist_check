@@ -18,10 +18,14 @@ class ShodanIP:
             api = Shodan(self.api_key)
             host = api.host(ip)
 
-            print(f"Org: {host.get('org', 'n/a')}\nOS: {host.get('os', 'n/a')}\n{host.get('isp', 'n/a')}")
+            print(
+                f"Org: {host.get('org', 'n/a')}\nOS: {host.get('os', 'n/a')}\n{host.get('isp', 'n/a')}"
+            )
 
             # Print all banners
             for item in host["data"]:
-                print(f"Port: {item['port']}\nBanner: {item['data']}\nHostnames: {item['hostnames']}")
+                print(
+                    f"Port: {item['port']}\nBanner: {item['data']}\nHostnames: {item['hostnames']}"
+                )
         except APIError as e:
             print(e)
