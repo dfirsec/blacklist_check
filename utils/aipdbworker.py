@@ -7,11 +7,8 @@ from utils.termcolors import Termcolor as Tc
 
 
 class AbuseIPDB:
-    """
-    Performs check against abuseipdb.com
-    """
-
     def __init__(self, api_key):
+        """Return the the url with api key."""
         self.api_key = api_key
 
     def aipdb_run(self, ip):
@@ -21,7 +18,7 @@ class AbuseIPDB:
         headers = {"Key": self.api_key, "Accept": "application/json"}
         base_url = "https://api.abuseipdb.com/api/v2/check"
         params = (("ipAddress", ip),)
-        
+
         try:
             resp = requests.get(base_url, headers=headers, params=params).json()
         except (HTTPError, RequestException, Timeout):

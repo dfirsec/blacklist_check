@@ -35,6 +35,7 @@ feeds = parent.joinpath("resc/feeds.json")
 
 class DNSBL:
     def __init__(self, host, threads):
+        """DNS resolver options."""
         self.host = host
         self.threads = threads
         self.cnt = 0
@@ -44,19 +45,15 @@ class DNSBL:
 
     @staticmethod
     def update_dnsbl():
-        """
-        Updates DNS Blacklist
-        """
+        """Updates DNS Blacklist."""
         url = "http://multirbl.valli.org/list/"
         page = requests.get(url).text
         soup = BeautifulSoup(page, "html.parser")
-        table = soup.find("table")
-        table_rows = table.find_all("tr")
+        table_rows = soup.find("table").find_all("tr")
 
         alive = []
         for tr in table_rows:
-            td = tr.find_all("td")
-            row = [i.text for i in td]
+            row = [i.text for i in tr.find_all("td")]
             if "(hidden)" not in row:
                 alive.append(row[2])
 
@@ -82,11 +79,10 @@ class DNSBL:
                 json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)
         else:
             return False
+        return None
 
     def resolve_dns(self, qry):
-        """
-        DNS Resolver
-        """
+        """Return DNS Resolver."""
         try:
             self.resolver.nameservers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
             answer = self.resolver.resolve(qry, "A")

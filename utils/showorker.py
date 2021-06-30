@@ -6,11 +6,8 @@ from utils.termcolors import Termcolor as Tc
 
 
 class ShodanIP:
-    """
-    Performs check against shodan
-    """
-
     def __init__(self, api_key):
+        """Return the api key."""
         self.api_key = api_key
 
     def shodan_run(self, ip):

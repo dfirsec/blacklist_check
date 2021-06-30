@@ -36,6 +36,10 @@ blklist = parent.joinpath("resc/blacklist.json")
 feeds = parent.joinpath("resc/feeds.json")
 settings = parent.joinpath("settings.ini")
 
+# Configuration Parser
+config = ConfigParser()
+config.read(settings)
+
 
 def parser():
     p = argparse.ArgumentParser(description="IP Blacklist Check")
@@ -74,13 +78,11 @@ def parser():
     return p
 
 
-def check_apikey(name, query_type):
-    """
-    Configuration Parser
-    """
-    config = ConfigParser()
-    config.read(settings)
+p = parser()
+args = p.parse_args()
 
+
+def check_apikey(name, query_type):
     # verify api key
     if not config.get(f"{name}", "api_key"):
         print(f"Please add {name} api key to the '{settings.name}' file")
@@ -88,12 +90,10 @@ def check_apikey(name, query_type):
         api_key = config.get(f"{name}", "api_key")
         name = query_type(api_key)
         return name
+    return None
 
 
 def main():
-    p = parser()
-    args = p.parse_args()
-
     pbl = ProcessBL()
     dbl = DNSBL(host=args.query, threads=args.threads)
 

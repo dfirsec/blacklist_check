@@ -2,10 +2,6 @@ from colorama import Fore, init
 
 
 class Termcolor:
-    """
-    Terminal Color Selector
-    """
-
     init(autoreset=True)
 
     # =colors
@@ -36,6 +32,6 @@ class Termcolor:
 
     # feeds
     chk_feeds = f"{green}Checking if feeds are current..."
-    missing = f"\n{warning} Blacklist file missing -- use the '-u' option to download.\n{yellow}  Run: python blacklist_downloader.py -u"
+    missing = f"\n{warning} Blacklist file missing, use the '-u' option to download.\n"
     outdated = f"{warning}{yellow} Blacklist file is older than 1 day - - use the '-u' option to update.\n"
     current = f"\n{bold}All feeds are current. Use -fu to Force an Update"

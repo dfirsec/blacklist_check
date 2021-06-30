@@ -53,10 +53,6 @@ coloredlogs.install(
 
 
 class ProcessBL:
-    """
-    Blacklist Processor
-    """
-
     @staticmethod
     def clr_scrn():
         if platform.system() == "Windows":
@@ -90,18 +86,14 @@ class ProcessBL:
 
     @staticmethod
     def read_list():
-        """
-        Returns the name and url for each feed
-        """
+        """Returns the name and url for each feed."""
         with open(feeds) as json_file:
             data = json.load(json_file)
             return [[name, url] for name, url in data["Blacklist Feeds"].items()]
 
     @staticmethod
     def sort_list(data):
-        """
-        Sorts lists by name and count
-        """
+        """Sorts lists by name and count."""
         sort_name = sorted((name, ip_cnt) for (name, ip_cnt) in data["Blacklists"].items())
         for n, i in enumerate(sort_name, start=1):
             try:
@@ -111,9 +103,7 @@ class ProcessBL:
                 continue
 
     def list_count(self):
-        """
-        Returns a count of IP addresses for each feed
-        """
+        """Returns a count of IP addresses for each feed."""
         try:
             with open(blklist) as json_file:
                 data = json.load(json_file)
@@ -127,9 +117,7 @@ class ProcessBL:
             self.outdated()
 
     def update_list(self):
-        """
-        Updates the feed list with latest IP addresses
-        """
+        """Updates the feed list with latest IP addresses."""
         bl_dict = {}
         print(f"{Tc.green}[ Updating ]{Tc.rst}")
         with open(blklist, "w") as json_file:
@@ -149,9 +137,7 @@ class ProcessBL:
             json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)
 
     def add_feed(self, feed, url):
-        """
-        Manually add feed
-        """
+        """Manually add feed."""
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["Blacklist Feeds"]
@@ -177,9 +163,7 @@ class ProcessBL:
 
     @staticmethod
     def remove_feed():
-        """
-        Remove a feed item
-        """
+        """Remove a feed item."""
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["Blacklist Feeds"]
@@ -211,13 +195,11 @@ class ProcessBL:
     def ip_matches(self, ip_addrs):
         found = []
         qf = ContactFinder()
-        
+
         print(f"\n{Tc.dotsep}\n{Tc.green}[ Local Blacklist Check ]{Tc.rst}")
 
         def bls_worker(json_list, list_name, list_type):
-            """
-            Checks IP against several blacklists
-            """
+            """Checks IP against several blacklists."""
             with open(json_list) as json_file:
                 ip_list = json.load(json_file)
 
@@ -242,9 +224,7 @@ class ProcessBL:
                     continue
 
         def scs_worker(json_list, list_name, list_type):
-            """
-            Performs a check against known internet scanners
-            """
+            """Performs a check against known internet scanners."""
             with open(json_list) as json_file:
                 ip_list = json.load(json_file)
 
@@ -293,17 +273,13 @@ class ProcessBL:
 
     @staticmethod
     def modified_date(_file):
-        """
-        Returns the last modified date, or last download
-        """
+        """Returns the last modified date, or last download."""
         lastmod = os.stat(_file).st_mtime
         return datetime.strptime(time.ctime(lastmod), "%a %b %d %H:%M:%S %Y")
 
     @staticmethod
     def geo_locate(ip_addr):
-        """
-        Returns IP address geolocation
-        """
+        """Returns IP address geolocation."""
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
         try:
             url = f"https://freegeoip.live/json/{ip_addr}"
@@ -322,12 +298,11 @@ class ProcessBL:
             resp.raise_for_status()
         except Exception as err:
             print(f"[Error] {err}\n")
+        return None
 
     @staticmethod
     def whois_ip(ip_addr):
-        """
-        Returns IP address whois information
-        """
+        """Returns IP address whois information."""
         try:
             # ref: https://ipwhois.readthedocs.io/en/latest/RDAP.html
             obj = IPWhois(ip_addr)
@@ -346,9 +321,7 @@ class ProcessBL:
 
     @staticmethod
     def outdated():
-        """
-        Checks if feed list is outdated (within last 24 hours)
-        """
+        """Check feed list age."""
         try:
             file_time = os.path.getmtime(blklist)
             if (time.time() - file_time) / 3600 > 24:
@@ -360,9 +333,7 @@ class ProcessBL:
 
     @staticmethod
     def ip46(ip_addr):
-        """
-        Performs check against ip-46.com
-        """
+        """Performs check against ip-46.com."""
         ip_addr = "".join(ip_addr)
         url = f"https://ip-46.com/{ip_addr}"
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
@@ -375,12 +346,11 @@ class ProcessBL:
             print(". ".join(metadata["content"].split(". ")[0:2]).split("IP-46.com", 1)[0])
             return detection
         print(Tc.clean)
+        return None
 
     @staticmethod
     def urlhaus(ip_addr):
-        """
-        Performs check against urlhaus-api.abuse.ch
-        """
+        """Performs check against urlhaus-api.abuse.ch."""
         url = "https://urlhaus-api.abuse.ch/v1/host/"
         headers = CaseInsensitiveDict([("Accept", "application/json")])
         data = {"host": ip_addr}
@@ -389,33 +359,30 @@ class ProcessBL:
         try:
             if resp["query_status"] == "no_results":
                 print(Tc.clean)
-            elif resp["query_status"] != "ok":
-                print(f"Error in query: {resp['query_status']}")
-            else:
-                if resp["urls"]:
-                    for k in resp["urls"]:
-                        if k["url_status"] == "online":
-                            print(f"Status: {Tc.red}{k['url_status'].title()}{Tc.rst}")
-                            print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
-                            if k["tags"]:
-                                print(f"Tags: {', '.join(k['tags'])}\n")
-                            else:
-                                print("\n")
+                
+            if resp["urls"]:
+                for k in resp["urls"]:
+                    if k["url_status"] == "online":
+                        print(f"Status: {Tc.red}{k['url_status'].title()}{Tc.rst}")
+                        print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
+                        if k["tags"]:
+                            print(f"Tags: {', '.join(k['tags'])}\n")
                         else:
-                            print(f"Status: {k['url_status'].title()}")
-                            print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
-                            if k["tags"]:
-                                print(f"Tags: {', '.join(k['tags'])}\n")
-                            else:
-                                print("\n")
-        except TypeError:
+                            print("\n")
+                    else:
+                        print(f"Status: {k['url_status'].title()}")
+                        print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
+                        if k["tags"]:
+                            print(f"Tags: {', '.join(k['tags'])}\n")
+                        else:
+                            print("\n")
+        except (TypeError, KeyError):
             return None
+        return None
 
     @staticmethod
     def threatfox(ip_addr):
-        """
-        Performs check against threatfox-api.abuse.ch
-        """
+        """Performs check against threatfox-api.abuse.ch."""
         url = "https://threatfox-api.abuse.ch/api/v1/"
         headers = CaseInsensitiveDict([("Accept", "application/json")])
         ip_addr = "".join(ip_addr)
@@ -425,18 +392,17 @@ class ProcessBL:
         try:
             if resp["query_status"] == "no_results" or resp["data"] == "Your search did not yield any results":
                 print(Tc.clean)
-            elif resp["query_status"] != "ok":
-                print(f"Query Error: {resp['data']}")
-            else:
-                if resp["data"]:
-                    for k in resp["data"]:
-                        print(f"Threat Type: {k['threat_type'].replace('_', ' ').title()}")
-                        print(f"IOC: {k['ioc']}")
-                        print(f"Malware: {k['malware']}")
-                        print(f"Malware Alias: {k['malware_alias']}")
-                        if k["tags"]:
-                            print(f"Tags: {', '.join(k['tags'])}\n")
-                        else:
-                            print("\n")
-        except TypeError:
+                
+            if resp["data"]:
+                for k in resp["data"]:
+                    print(f"Threat Type: {k['threat_type'].replace('_', ' ').title()}")
+                    print(f"IOC: {k['ioc']}")
+                    print(f"Malware: {k['malware']}")
+                    print(f"Malware Alias: {k['malware_alias']}")
+                    if k["tags"]:
+                        print(f"Tags: {', '.join(k['tags'])}\n")
+                    else:
+                        print("\n")
+        except (TypeError, KeyError):
             return None
+        return None
