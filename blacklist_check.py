@@ -42,7 +42,7 @@ config.read(settings)
 
 
 def parser():
-    p = argparse.ArgumentParser(description="IP Blacklist Check")
+    parser = argparse.ArgumentParser(description="IP Blacklist Check")
     group1 = p.add_mutually_exclusive_group()
     group2 = p.add_mutually_exclusive_group()
 
@@ -56,9 +56,9 @@ def parser():
         help="threads for rbl check (default 25, max 50)",
     )
 
-    p.add_argument("-v", dest="vt_query", action="store_true", help="check virustotal for ip info")
-    p.add_argument("-a", dest="aipdb_query", action="store_true", help="check abuseipdb for ip info")
-    p.add_argument("-s", dest="shodan_query", action="store_true", help="check shodan for ip info")
+    parser.add_argument("-v", dest="vt_query", action="store_true", help="check virustotal for ip info")
+    parser.add_argument("-a", dest="aipdb_query", action="store_true", help="check abuseipdb for ip info")
+    parser.add_argument("-s", dest="shodan_query", action="store_true", help="check shodan for ip info")
 
     group1.add_argument("-u", dest="update", action="store_true", help="update blacklist feeds")
     group1.add_argument("-fu", dest="force", action="store_true", help="force update of all feeds")
@@ -75,7 +75,7 @@ def parser():
         help="remove an existing blacklist feed",
     )
 
-    return p
+    return parser
 
 
 p = parser()
