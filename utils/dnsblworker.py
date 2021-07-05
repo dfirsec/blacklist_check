@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 
 from utils.termcolors import Termcolor as Tc
 
+# Primary logger
 logger = verboselogs.VerboseLogger(__name__)
 logger.setLevel(logging.INFO)
 coloredlogs.install(
@@ -34,8 +35,10 @@ feeds = parent.joinpath("resc/feeds.json")
 
 
 class DNSBL:
+    """Performs functions for updating
+    DNS blacklist and returning query results."""
+
     def __init__(self, host, threads):
-        """DNS resolver options."""
         self.host = host
         self.threads = threads
         self.cnt = 0
@@ -45,16 +48,16 @@ class DNSBL:
 
     @staticmethod
     def update_dnsbl():
-        """Updates DNS Blacklist."""
+        """Refreshes DNS Blacklist."""
         url = "http://multirbl.valli.org/list/"
         page = requests.get(url).text
         soup = BeautifulSoup(page, "html.parser")
         table_rows = soup.find("table").find_all("tr")
 
         alive = []
-        for tr in table_rows:
-            row = [i.text for i in tr.find_all("td")]
-            if "(hidden)" not in row:
+        for row in table_rows:
+            data = [i.text for i in row.find_all("td")]
+            if "(hidden)" not in data:
                 alive.append(row[2])
 
         with open(feeds) as json_file:
@@ -64,8 +67,8 @@ class DNSBL:
         # Remove contact and nszones items from list
         patterns = ["*.nszones.com", "*contacts*"]
         for pattern in patterns:
-            for x in fnmatch.filter(alive, pattern):
-                alive.remove(x)
+            for match in fnmatch.filter(alive, pattern):
+                alive.remove(match)
 
         diff = [x for x in alive if x not in feed_list]
         if len(diff) > 1:
@@ -98,6 +101,7 @@ class DNSBL:
             pass
         except DeprecationWarning:
             pass
+        return None
 
     def dnsbl_query(self, blacklist):
         host = str("".join(self.host))

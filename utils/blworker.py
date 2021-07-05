@@ -36,6 +36,7 @@ blklist = parent.joinpath("resc/blacklist.json")
 scnrs = parent.joinpath("resc/scanners.json")
 feeds = parent.joinpath("resc/feeds.json")
 
+# Primary logger
 logger = verboselogs.VerboseLogger(__name__)
 logger.setLevel(logging.INFO)
 coloredlogs.install(
@@ -79,10 +80,11 @@ class ProcessBL:
         ipv4 = re.compile(r"(?![0])\d+\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
         try:
             results = trio.run(self.fetch, feed)
-            ip = [ip.group() for ip in re.finditer(ipv4, results)]
-            return ip
+            ip_addr = [ip.group() for ip in re.finditer(ipv4, results)]
+            return ip_addr
         except (TypeError, OSError):
             pass
+        return None
 
     @staticmethod
     def read_list():
@@ -95,11 +97,11 @@ class ProcessBL:
     def sort_list(data):
         """Sorts lists by name and count."""
         sort_name = sorted((name, ip_cnt) for (name, ip_cnt) in data["Blacklists"].items())
-        for n, i in enumerate(sort_name, start=1):
+        for num, idx in enumerate(sort_name, start=1):
             try:
-                print(f"{Tc.cyan}{n:2}){Tc.rst} {i[0]:23}: {len(i[1]):<6,}")
+                print(f"{Tc.cyan}{num:2}){Tc.rst} {idx[0]:23}: {len(idx[1]):<6,}")
             except TypeError:
-                print(f"{Tc.cyan}{n:2}){Tc.rst} {i[0]:23}: {Tc.gray}[DOWNLOAD error]{Tc.rst}")
+                print(f"{Tc.cyan}{num:2}){Tc.rst} {idx[0]:23}: {Tc.gray}[DOWNLOAD error]{Tc.rst}")
                 continue
 
     def list_count(self):
@@ -167,8 +169,8 @@ class ProcessBL:
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["Blacklist Feeds"]
-            for n, (k, v) in enumerate(feed_list.items(), start=1):
-                print(f"{Tc.cyan}{n:2}){Tc.rst} {k:25}{v}")
+            for num, (key, val) in enumerate(feed_list.items(), start=1):
+                print(f"{Tc.cyan}{num:2}){Tc.rst} {key:25}{val}")
         try:
             # remove from feeds
             opt = int(input("\nPlease select your choice by number, or Ctrl-C to cancel: "))
@@ -194,7 +196,7 @@ class ProcessBL:
 
     def ip_matches(self, ip_addrs):
         found = []
-        qf = ContactFinder()
+        finder = ContactFinder()
 
         print(f"\n{Tc.dotsep}\n{Tc.green}[ Local Blacklist Check ]{Tc.rst}")
 
@@ -211,7 +213,9 @@ class ProcessBL:
                         print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")
                         print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")
                         try:
-                            print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
+                            print(
+                                f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in finder.find(ip)])}\n"
+                            )
                         except DNSException:
                             pass
 
@@ -231,27 +235,27 @@ class ProcessBL:
             # single ip addresses
             shodan = list(ip_list[list_name]["Shodan"])
             s_matches = set(ip_addrs) & set(shodan)
-            for ip in s_matches:
-                print(f"\n{list_type} [{ip}] > {Tc.yellow}Shodan{Tc.rst}")
-                if ip not in found:
-                    found.append(ip)
+            for ip_addr in s_matches:
+                print(f"\n{list_type} [{ip_addr}] > {Tc.yellow}Shodan{Tc.rst}")
+                if ip_addr not in found:
+                    found.append(ip_addr)
 
             proj25499 = list(ip_list[list_name]["Project 25499"])
             p_matches = set(ip_addrs) & set(proj25499)
-            for ip in p_matches:
-                print(f"\n{list_type} [{ip}] > {Tc.yellow}Project 25499{Tc.rst}")
-                if ip not in found:
-                    found.append(ip)
+            for ip_addr in p_matches:
+                print(f"\n{list_type} [{ip_addr}] > {Tc.yellow}Project 25499{Tc.rst}")
+                if ip_addr not in found:
+                    found.append(ip_addr)
 
             # networks
             tenable = list(ip_list[list_name]["Cloudflare-Tenable"])
             t_matches = [
                 ip for ip in ip_addrs for net in tenable if ipaddress.ip_address(ip) in ipaddress.ip_network(net)
             ]
-            for ip in set(t_matches):
-                print(f"\n{list_type} [{ip}] > {Tc.yellow}Cloudflare-Tenable{Tc.rst}")
-                if ip not in found:
-                    found.append(ip)
+            for ip_addr in set(t_matches):
+                print(f"\n{list_type} [{ip_addr}] > {Tc.yellow}Cloudflare-Tenable{Tc.rst}")
+                if ip_addr not in found:
+                    found.append(ip_addr)
 
         # Compare and find blacklist matches
         bls_worker(blklist, "Blacklists", Tc.blacklisted)
@@ -262,12 +266,12 @@ class ProcessBL:
         # if not blacklisted
         nomatch = [ip for ip in ip_addrs if ip not in found]
         if nomatch:
-            for ip in nomatch:
-                print(f"{Tc.clean}{Tc.rst} [{ip}]")
-                print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}", end="\n")
-                print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")
+            for ip_addr in nomatch:
+                print(f"{Tc.clean}{Tc.rst} [{ip_addr}]")
+                print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip_addr)}{Tc.bold}", end="\n")
+                print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip_addr)}")
                 try:
-                    print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in qf.find(ip)])}\n")
+                    print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in finder.find(ip_addr)])}\n")
                 except DNSException:
                     pass
 
@@ -326,8 +330,8 @@ class ProcessBL:
             file_time = os.path.getmtime(blklist)
             if (time.time() - file_time) / 3600 > 24:
                 return True
-        except Exception as e:
-            sys.exit(e)
+        except Exception as err:
+            sys.exit(err)
         else:
             return False
 
@@ -359,7 +363,7 @@ class ProcessBL:
         try:
             if resp["query_status"] == "no_results":
                 print(Tc.clean)
-                
+
             if resp["urls"]:
                 for k in resp["urls"]:
                     if k["url_status"] == "online":
@@ -392,7 +396,7 @@ class ProcessBL:
         try:
             if resp["query_status"] == "no_results" or resp["data"] == "Your search did not yield any results":
                 print(Tc.clean)
-                
+
             if resp["data"]:
                 for k in resp["data"]:
                     print(f"Threat Type: {k['threat_type'].replace('_', ' ').title()}")

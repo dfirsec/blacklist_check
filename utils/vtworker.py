@@ -10,7 +10,6 @@ from utils.termcolors import Termcolor as Tc
 
 class VirusTotal:
     def __init__(self, api_key=None):
-        """Return the the url with api key."""
         self.api_key = api_key
         self.base_url = "https://www.virustotal.com/vtapi/v2/ip-address/report?apikey="
 
@@ -30,8 +29,8 @@ class VirusTotal:
             print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{Tc.rst}")
         return None
 
-    def vt_run(self, ip):
-        url = f"{self.base_url}{self.api_key}&ip={''.join(ip)}"
+    def vt_run(self, ip_addr):
+        url = f"{self.base_url}{self.api_key}&ip={''.join(ip_addr)}"
         data = json.dumps(self.vt_connect(url))
         json_resp = json.loads(data)
         if json_resp["response_code"] == 1:

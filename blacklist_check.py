@@ -42,11 +42,11 @@ config.read(settings)
 
 
 def parser():
-    parser = argparse.ArgumentParser(description="IP Blacklist Check")
-    group1 = p.add_mutually_exclusive_group()
-    group2 = p.add_mutually_exclusive_group()
+    _parser = argparse.ArgumentParser(description="IP Blacklist Check")
+    group_1 = _parser.add_mutually_exclusive_group()
+    group_2 = _parser.add_mutually_exclusive_group()
 
-    parser.add_argument(
+    _parser.add_argument(
         "-t",
         dest="threads",
         nargs="?",
@@ -56,34 +56,30 @@ def parser():
         help="threads for rbl check (default 25, max 50)",
     )
 
-    parser.add_argument("-v", dest="vt_query", action="store_true", help="check virustotal for ip info")
-    parser.add_argument("-a", dest="aipdb_query", action="store_true", help="check abuseipdb for ip info")
-    parser.add_argument("-s", dest="shodan_query", action="store_true", help="check shodan for ip info")
+    _parser.add_argument("-v", dest="vt_query", action="store_true", help="check virustotal for ip info")
+    _parser.add_argument("-a", dest="aipdb_query", action="store_true", help="check abuseipdb for ip info")
+    _parser.add_argument("-s", dest="shodan_query", action="store_true", help="check shodan for ip info")
 
-    group1.add_argument("-u", dest="update", action="store_true", help="update blacklist feeds")
-    group1.add_argument("-fu", dest="force", action="store_true", help="force update of all feeds")
-    group1.add_argument("-sh", dest="show", action="store_true", help="show blacklist feeds")
+    group_1.add_argument("-u", dest="update", action="store_true", help="update blacklist feeds")
+    group_1.add_argument("-fu", dest="force", action="store_true", help="force update of all feeds")
+    group_1.add_argument("-sh", dest="show", action="store_true", help="show blacklist feeds")
 
-    group2.add_argument("-q", dest="query", nargs="+", metavar="query", help="query a single or multiple ip addrs")
+    group_2.add_argument("-q", dest="query", nargs="+", metavar="query", help="query a single or multiple ip addrs")
 
-    group2.add_argument("-f", dest="file", metavar="file", help="query a list of ip addresses from file")
-    group2.add_argument("-i", dest="insert", action="store_true", help="insert a new blacklist feed")
-    group2.add_argument(
+    group_2.add_argument("-f", dest="file", metavar="file", help="query a list of ip addresses from file")
+    group_2.add_argument("-i", dest="insert", action="store_true", help="insert a new blacklist feed")
+    group_2.add_argument(
         "-r",
         dest="remove",
         action="store_true",
         help="remove an existing blacklist feed",
     )
 
-    return parser
-
-
-p = parser()
-args = p.parse_args()
+    return _parser
 
 
 def check_apikey(name, query_type):
-    # verify api key
+    """Verifies API Key."""
     if not config.get(f"{name}", "api_key"):
         print(f"Please add {name} api key to the '{settings.name}' file")
     else:
@@ -94,13 +90,14 @@ def check_apikey(name, query_type):
 
 
 def main():
+    args = parser().parse_args()
     pbl = ProcessBL()
     dbl = DNSBL(host=args.query, threads=args.threads)
 
     # check arguments
     if len(sys.argv[1:]) == 0:
-        p.print_help()
-        p.exit()
+        parser().print_help()
+        parser().exit()
 
     if not blklist.exists() or os.stat(blklist).st_size == 0:
         print(f"{Tc.yellow}Blacklist file is missing...{Tc.rst}\n")

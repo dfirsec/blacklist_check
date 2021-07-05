@@ -23,8 +23,8 @@ class URLScan:
         else:
             if resp["results"]:
                 for results in resp["results"]:
-                    for k, v in results["page"].items():
-                        print(f"{k.title():12}: {v}")
+                    for key, val in results["page"].items():
+                        print(f"{key.title():12}: {val}")
                     print(f"{'Result':12}: {results['result']}\n{'Screenshot':12}: {results['screenshot']}")
             else:
                 print(Tc.clean)
