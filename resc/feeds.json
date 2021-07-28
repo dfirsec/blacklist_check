@@ -19,7 +19,6 @@
         "Fedodo Tracker": "https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
         "MalC0de Blacklist": "http://malc0de.com/bl/IP_Blacklist.txt",
         "Malware Army": "https://malware.army/api/honey_iplist",
-        "Malware Domains": "http://www.malwaredomainlist.com/hostslist/ip.txt",
         "MyIP Blacklist": "https://www.myip.ms/files/blacklist/csf/latest_blacklist.txt",
         "OpenPhish": "https://openphish.com/feed.txt",
         "Rutgers": "https://report.cs.rutgers.edu/DROP/attackers",
@@ -30,6 +29,7 @@
         "Threat Crowd": "https://www.threatcrowd.org/feeds/ips.txt",
         "Threatweb Botnet IPs": "https://www.threatweb.com/access/Botnet-IPs-High_Confidence_BL.txt",
         "Threatweb Watchlist": "https://www.threatweb.com/access/SIEM/OPTIV_HIGH_CONFIDENCE_SIEM_IP_WATCHLIST.txt",
+        "Ultimate-Hosts": "https://raw.githubusercontent.com/Ultimate-Hosts-Blacklist/Ultimate.Hosts.Blacklist/master/ips/ips0.list",
         "URL Haus": "https://urlhaus.abuse.ch/downloads/csv_recent/",
         "Windows SpyBlocker": "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/firewall/extra.txt",
         "ZoneFiles": "https://zonefiles.io/f/compromised/ip/live/"

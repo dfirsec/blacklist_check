@@ -20,7 +20,7 @@ from utils.urlscworker import URLScan
 from utils.vtworker import VirusTotal
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.2.3"
+__version__ = "v0.2.4"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -108,7 +108,7 @@ def main():
     filetime = datetime.datetime.fromtimestamp(blklist.stat().st_mtime) - today
 
     if filetime.days <= -7:
-        print(f"{Tc.yellow}[!] Blacklist file is older than 7days -- recommend updating{Tc.rst}")
+        print(f"{Tc.yellow}[!] Blacklist file is older than 7 days -- recommend updating{Tc.rst}")
 
     if args.query:
         ip_addrs = []

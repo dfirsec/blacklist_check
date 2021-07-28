@@ -56,9 +56,12 @@ class DNSBL:
 
         alive = []
         for row in table_rows:
-            data = [i.text for i in row.find_all("td")]
-            if "(hidden)" not in data:
-                alive.append(row[2])
+            try:
+                data = [i.text for i in row.find_all("td")]
+                if "(hidden)" not in data:
+                    alive.append(row[2])
+            except KeyError:
+                continue
 
         with open(feeds) as json_file:
             feeds_dict = json.load(json_file)
