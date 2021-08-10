@@ -2,6 +2,7 @@
     "Blacklist Feeds": {
         "Active Phishing IPs": "https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/phishing-IPs-ACTIVE.txt",
         "Alien Vault Reputation": "http://reputation.alienvault.com/reputation.data",
+        "BinaryDefense Banlist": "https://www.binarydefense.com/banlist.txt",
         "Bitcoin Nodes": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/bitcoin_nodes.ipset",
         "Blocklist DE": "http://www.blocklist.de/lists/all.txt",
         "Bot Scout IPs": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/botscout.ipset",
