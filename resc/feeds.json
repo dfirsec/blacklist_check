@@ -23,6 +23,7 @@
         "Malware Army": "https://malware.army/api/honey_iplist",
         "MyIP Blacklist": "https://www.myip.ms/files/blacklist/csf/latest_blacklist.txt",
         "OpenPhish": "https://openphish.com/feed.txt",
+        "RST Threat Feed": "https://rstcloud.net/free/ioc/ioc_ip_latest.json",
         "Rutgers": "https://report.cs.rutgers.edu/DROP/attackers",
         "SSL Abuse IP List": "https://sslbl.abuse.ch/blacklist/sslipblacklist.csv",
         "Stop Forum Spam": "https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/stopforumspam.ipset",
