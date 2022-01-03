@@ -1,6 +1,7 @@
 beautifulsoup4
 colorama
 coloredlogs
+dnspython
 httpx
 ipwhois
 lxml
@@ -8,4 +9,5 @@ querycontacts
 requests
 shodan
 trio
+urllib3
 verboselogs

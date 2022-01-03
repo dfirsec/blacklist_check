@@ -11,16 +11,15 @@ from pathlib import Path
 
 import urllib3
 
-from utils.aipdbworker import AbuseIPDB
-from utils.blworker import ProcessBL
-from utils.dnsblworker import DNSBL
-from utils.showorker import ShodanIP
+from utils.aipdb_worker import AbuseIPDB
+from utils.main_worker import ProcessBL, DNSBL
+from utils.shodan_worker import ShodanIP
 from utils.termcolors import Termcolor as Tc
-from utils.urlscworker import URLScan
-from utils.vtworker import VirusTotal
+from utils.urlsc_worker import URLScan
+from utils.vt_worker import VirusTotal
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.2.4"
+__version__ = "v0.2.5"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -32,7 +31,7 @@ urllib3.disable_warnings()
 
 # Base directory paths
 parent = Path(__file__).resolve().parent
-blklist = parent.joinpath("resc/blacklist.json")
+blacklist = parent.joinpath("resc/blacklist.json")
 feeds = parent.joinpath("resc/feeds.json")
 settings = parent.joinpath("settings.ini")
 
@@ -99,13 +98,13 @@ def main():
         parser().print_help()
         parser().exit()
 
-    if not blklist.exists() or os.stat(blklist).st_size == 0:
+    if not blacklist.exists() or os.stat(blacklist).st_size == 0:
         print(f"{Tc.yellow}Blacklist file is missing...{Tc.rst}\n")
         pbl.update_list()
 
     # check if file is older than 7 days
     today = datetime.datetime.today()
-    filetime = datetime.datetime.fromtimestamp(blklist.stat().st_mtime) - today
+    filetime = datetime.datetime.fromtimestamp(blacklist.stat().st_mtime) - today
 
     if filetime.days <= -7:
         print(f"{Tc.yellow}[!] Blacklist file is older than 7 days -- recommend updating{Tc.rst}")
@@ -136,7 +135,7 @@ def main():
             pbl.threatfox(args.query)
 
             print(f"\n{Tc.dotsep}\n{Tc.green}[ URLScan Check ]{Tc.rst}")
-            URLScan(args.query).urlsc()
+            URLScan(args.query).url_scan()
 
             # VirusTotal Query
             if args.vt_query:

@@ -13,7 +13,7 @@ class URLScan:
         )
         self.base_url = "https://urlscan.io/api/v1/search/"
 
-    def urlsc(self):
+    def url_scan(self):
         try:
             resp = requests.get(self.base_url, headers=self.headers, params=self.params).json()
         except (HTTPError, RequestException, Timeout):
