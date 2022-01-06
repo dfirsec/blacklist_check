@@ -19,6 +19,7 @@
         "Fedodo Tracker": "https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
         "MalC0de Blacklist": "http://malc0de.com/bl/IP_Blacklist.txt",
         "Malware Army": "https://malware.army/api/honey_iplist",
+        "MyIP": "https://myip.ms/files/blacklist/general/latest_blacklist.txt",
         "OpenPhish": "https://openphish.com/feed.txt",
         "RST Threat Feed": "https://rstcloud.net/free/ioc/ioc_ip_latest.json",
         "Rutgers": "https://report.cs.rutgers.edu/DROP/attackers",
