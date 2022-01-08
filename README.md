@@ -48,4 +48,4 @@ optional arguments:
 
 ### Example Run
 
-![alt text](imgs/animation.gif)
+![alt text](imgs/blacklist_check.gif)

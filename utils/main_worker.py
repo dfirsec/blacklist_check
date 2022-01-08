@@ -447,15 +447,17 @@ class ProcessBL:
             # ref: https://ipwhois.readthedocs.io/en/latest/RDAP.html
             obj = IPWhois(ip_addr)
             results = obj.lookup_rdap(depth=1)
+            entity = results["entities"][0]
+            contact = ""
             if results["asn_description"] and "NA" not in results["asn_description"]:
                 contact = results["asn_description"]
+            if results["objects"][entity]["contact"]["address"]:
+                contact = results["objects"][entity]["contact"]["address"][0]["value"].replace("\r\n", ", ")
         except (exceptions.ASNRegistryError, exceptions.WhoisLookupError):
             return "No results"
         except KeyError:
             return None
         else:
-            entity = results["entities"][0]
-            contact = results["objects"][entity]["contact"]["address"][0]["value"].replace("\r\n", ", ")
             return contact.replace("\n", ", ")
 
     @staticmethod
