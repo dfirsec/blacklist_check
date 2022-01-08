@@ -201,7 +201,7 @@ class ProcessBL:
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/89.0"}
         async with httpx.AsyncClient(verify=False) as client:
             try:
-                resp = await client.get(url, timeout=10.0, headers=headers)
+                resp = await client.get(url, timeout=10.0, headers=headers, follow_redirects=True)
                 resp.raise_for_status()
             except httpx.TimeoutException:
                 print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{url}{Tc.rst}")
