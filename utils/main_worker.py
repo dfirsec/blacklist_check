@@ -1,3 +1,4 @@
+import asyncio
 import fnmatch
 import ipaddress
 import json
@@ -13,6 +14,7 @@ from datetime import datetime
 from ipaddress import ip_address
 from pathlib import Path
 
+import asyncwhois
 import coloredlogs
 import dns.resolver
 import httpx
@@ -21,9 +23,6 @@ import trio
 import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
-from dns.exception import DNSException
-from ipwhois import IPWhois, exceptions
-from querycontacts import ContactFinder
 from requests.structures import CaseInsensitiveDict
 
 from utils.termcolors import Termcolor as Tc
@@ -86,8 +85,8 @@ class DNSBL:
             except KeyError:
                 continue
 
-        with open(feeds) as json_file:
-            feeds_dict = json.load(json_file)
+        with open(feeds, encoding="utf-8") as feed:
+            feeds_dict = json.load(feed)
             feed_list = feeds_dict["DNS Blacklists"]["DNSBL"]
 
         # Remove contact and nszones items from list
@@ -104,7 +103,7 @@ class DNSBL:
                     logger.success(f"[+] Adding {item}")
                     feed_list.append(item)
 
-            with open(feeds, "w") as json_file:
+            with open(feeds, "w", encoding="utf-8") as json_file:
                 json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)
         else:
             return False
@@ -119,10 +118,10 @@ class DNSBL:
             return answer
 
         except (
-                dns.resolver.NXDOMAIN,
-                dns.resolver.Timeout,
-                dns.resolver.NoNameservers,
-                dns.resolver.NoAnswer,
+            dns.resolver.NXDOMAIN,
+            dns.resolver.Timeout,
+            dns.resolver.NoNameservers,
+            dns.resolver.NoAnswer,
         ):
             pass
         except DeprecationWarning:
@@ -174,7 +173,7 @@ class DNSBL:
             pass
 
     def dnsbl_mapper(self, threads=None):
-        with open(feeds) as json_file:
+        with open(feeds, encoding="utf-8") as json_file:
             data = json.load(json_file)
         dnsbl = list(data["DNS Blacklists"]["DNSBL"])
 
@@ -225,7 +224,7 @@ class ProcessBL:
     @staticmethod
     def read_list():
         """Returns the name and url for each feed."""
-        with open(feeds) as json_file:
+        with open(feeds, encoding="utf-8") as json_file:
             data = json.load(json_file)
             return [[name, url] for name, url in data["Blacklist Feeds"].items()]
 
@@ -243,7 +242,7 @@ class ProcessBL:
     def list_count(self):
         """Returns a count of IP addresses for each feed."""
         try:
-            with open(blklist) as json_file:
+            with open(blklist, encoding="utf-8") as json_file:
                 data = json.load(json_file)
                 self.clear_screen()
                 print(f"\n{Tc.bold}{'Blacklists':28}IP cnt{Tc.rst}")
@@ -258,7 +257,7 @@ class ProcessBL:
         """Updates the feed list with latest IP addresses."""
         bl_dict = {}
         print(f"{Tc.green}[ Updating ]{Tc.rst}")
-        with open(blklist, "w") as json_file:
+        with open(blklist, "w", encoding="utf-8") as json_file:
             bl_dict["Blacklists"] = {}
             for name, url in self.read_list():
                 logger.success(f"  {Tc.processing} {name:20}")
@@ -276,7 +275,7 @@ class ProcessBL:
 
     def add_feed(self, feed, url):
         """Manually add feed."""
-        with open(feeds) as json_file:
+        with open(feeds, encoding="utf-8") as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["Blacklist Feeds"]
         try:
@@ -284,17 +283,17 @@ class ProcessBL:
                 sys.exit(f'{Tc.warning} Feed "{feed}" already exists.')
         except KeyError:
             feed_list.update({feed: url})
-            with open(feeds, "w") as json_file:
+            with open(feeds, "w", encoding="utf-8") as json_file:
                 json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)
             print(f'[*] Added feed: "{feed}": "{url}"')
 
             print(f"\n{Tc.cyan}[ Updating new feed ]{Tc.rst}")
-            with open(blklist) as json_file:
+            with open(blklist, encoding="utf-8") as json_file:
                 bl_dict = json.load(json_file)
                 bl_list = bl_dict["Blacklists"]
 
             bl_list.update({feed: self.get_feeds(url)})
-            with open(blklist, "w") as json_file:
+            with open(blklist, "w", encoding="utf-8") as json_file:
                 json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)
 
             print(f"{Tc.success} {Tc.yellow}{len(bl_list[feed]):,}{Tc.rst} IPs added to '{feed}'")
@@ -302,7 +301,7 @@ class ProcessBL:
     @staticmethod
     def remove_feed():
         """Remove a feed item."""
-        with open(feeds) as json_file:
+        with open(feeds, encoding="utf-8") as json_file:
             feeds_dict = json.load(json_file)
             feed_list = feeds_dict["Blacklist Feeds"]
             for num, (key, val) in enumerate(feed_list.items(), start=1):
@@ -313,14 +312,14 @@ class ProcessBL:
             opt = opt - 1  # subtract 1 as enumerate starts at 1
             choice = list(feed_list)[opt]
             del feed_list[choice]
-            with open(feeds, "w") as json_file:
+            with open(feeds, "w", encoding="utf8") as json_file:
                 json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)
 
             # remove from blacklist
-            with open(blklist) as json_file:
+            with open(blklist, encoding="utf8") as json_file:
                 bl_dict = json.load(json_file)
                 del bl_dict["Blacklists"][choice]
-            with open(blklist, "w") as json_file:
+            with open(blklist, "w", encoding="utf-8") as json_file:
                 json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)
 
             print(f'{Tc.success} Successfully removed feed: "{choice}"')
@@ -332,13 +331,13 @@ class ProcessBL:
 
     def ip_matches(self, ip_addrs):
         found = []
-        finder = ContactFinder()
+        # finder = ContactFinder()
 
         print(f"\n{Tc.dotsep}\n{Tc.green}[ Local Blacklist Check ]{Tc.rst}")
 
         def bls_worker(json_list, list_name, list_type):
             """Checks IP against several blacklists."""
-            with open(json_list) as json_file:
+            with open(json_list, encoding="utf-8") as json_file:
                 ip_list = json.load(json_file)
 
             for name, item in ip_list[list_name].items():
@@ -347,14 +346,8 @@ class ProcessBL:
                     for ip in matches:
                         print(f"\n{list_type} [{ip}] > {Tc.yellow}{name}{Tc.rst}")
                         print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip)}{Tc.bold}")
-                        print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)}")
-                        try:
-                            print(
-                                f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in finder.find(ip)])}\n"
-                            )
-                        except DNSException:
-                            pass
-
+                        print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip)[0]}")
+                        print(f"{Tc.bold}{'   Abuse Email:':10} {Tc.rst}{self.whois_ip(ip)[1]}")
                         if ip not in found:
                             found.append(ip)
 
@@ -365,7 +358,7 @@ class ProcessBL:
 
         def scs_worker(json_list, list_name, list_type):
             """Performs a check against known internet scanners."""
-            with open(json_list) as json_file:
+            with open(json_list, encoding="utf-8") as json_file:
                 ip_list = json.load(json_file)
 
             # single ip addresses
@@ -405,11 +398,8 @@ class ProcessBL:
             for ip_addr in nomatch:
                 print(f"{Tc.clean}{Tc.rst} [{ip_addr}]")
                 print(f"{Tc.bold}{'   Location:':10} {Tc.rst}{self.geo_locate(ip_addr)}{Tc.bold}", end="\n")
-                print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip_addr)}")
-                try:
-                    print(f"{Tc.bold}{'   Contact:':10} {Tc.rst}{' '.join([str(i) for i in finder.find(ip_addr)])}\n")
-                except DNSException:
-                    pass
+                print(f"{Tc.bold}{'   Whois:':10} {Tc.rst}{self.whois_ip(ip_addr)[0]}")
+                print(f"{Tc.bold}{'   Abuse Email:':10} {Tc.rst}{self.whois_ip(ip_addr)[1]}")
 
     @staticmethod
     def modified_date(_file):
@@ -444,21 +434,18 @@ class ProcessBL:
     def whois_ip(ip_addr):
         """Returns IP address whois information."""
         try:
-            # ref: https://ipwhois.readthedocs.io/en/latest/RDAP.html
-            obj = IPWhois(ip_addr)
-            results = obj.lookup_rdap(depth=1)
-            entity = results["entities"][0]
-            contact = ""
-            if results["asn_description"] and "NA" not in results["asn_description"]:
-                contact = results["asn_description"]
-            if results["objects"][entity]["contact"]["address"]:
-                contact = results["objects"][entity]["contact"]["address"][0]["value"].replace("\r\n", ", ")
-        except (exceptions.ASNRegistryError, exceptions.WhoisLookupError):
-            return "No results"
-        except KeyError:
-            return None
+            loop = asyncio.get_event_loop()
+            results = loop.run_until_complete(asyncwhois.aio_whois_ipv4(ip_addr))
+        except Exception as err:
+            return "Whois failed", err
         else:
-            return contact.replace("\n", ", ")
+            org = ""
+            email = ""
+            if results.parser_output["organization"]:
+                org = results.parser_output["organization"]
+            if results.parser_output["abuse_email"]:
+                email = results.parser_output["abuse_email"]
+            return org, email
 
     @staticmethod
     def outdated():

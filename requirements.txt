@@ -1,11 +1,10 @@
+asyncwhois
 beautifulsoup4
 colorama
 coloredlogs
 dnspython
 httpx
-ipwhois
 lxml
-querycontacts
 requests
 shodan
 trio

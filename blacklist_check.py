@@ -19,7 +19,7 @@ from utils.urlsc_worker import URLScan
 from utils.vt_worker import VirusTotal
 
 __author__ = "DFIRSec (@pulsecode)"
-__version__ = "v0.2.5"
+__version__ = "v0.2.6"
 __description__ = "Check IP addresses against blacklists from various sources."
 
 
@@ -224,10 +224,10 @@ def main():
 
 if __name__ == "__main__":
     banner = fr"""
-        ____  __           __   ___      __     ________              __  
+        ____  __           __   ___      __     ________              __
        / __ )/ /___ ______/ /__/ (_)____/ /_   / ____/ /_  ___  _____/ /__
       / __  / / __ `/ ___/ //_/ / / ___/ __/  / /   / __ \/ _ \/ ___/ //_/
-     / /_/ / / /_/ / /__/ ,< / / (__  ) /_   / /___/ / / /  __/ /__/ ,<   
+     / /_/ / / /_/ / /__/ ,< / / (__  ) /_   / /___/ / / /  __/ /__/ ,<
     /_____/_/\__,_/\___/_/|_/_/_/____/\__/   \____/_/ /_/\___/\___/_/|_|
                                                                 {__version__}
     """
