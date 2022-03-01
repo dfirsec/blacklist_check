@@ -1,4 +1,3 @@
-import asyncio
 import fnmatch
 import ipaddress
 import json
@@ -254,7 +253,7 @@ class ProcessBL:
             self.outdated()
 
     def update_list(self):
-        """Updates the feed list with latest IP addresses."""
+        """Updates the feed list with the latest IP addresses."""
         bl_dict = {}
         print(f"{Tc.green}[ Updating ]{Tc.rst}")
         with open(blklist, "w", encoding="utf-8") as json_file:
@@ -434,10 +433,9 @@ class ProcessBL:
     def whois_ip(ip_addr):
         """Returns IP address whois information."""
         try:
-            loop = asyncio.get_event_loop()
-            results = loop.run_until_complete(asyncwhois.aio_whois_ipv4(ip_addr))
+            results = asyncwhois.whois_ipv4(ip_addr)
         except Exception as err:
-            return "Whois failed", err
+            return f"Whois failed: {err}"
         else:
             org = ""
             email = ""
