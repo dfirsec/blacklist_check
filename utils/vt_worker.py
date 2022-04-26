@@ -1,9 +1,10 @@
+import contextlib
 import json
 import sys
 from http.client import responses
 
 import requests
-from requests.exceptions import HTTPError, RequestException, Timeout
+from requests.exceptions import HTTPError, RequestException
 
 from utils.termcolors import Termcolor as Tc
 
@@ -25,7 +26,7 @@ class VirusTotal:
                 print(f" {Tc.error} {Tc.gray} {resp.status_code} {responses[resp.status_code]} {url}{Tc.rst}")
             else:
                 return resp.json()
-        except (HTTPError, RequestException, Timeout):
+        except (HTTPError, RequestException):
             print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{Tc.rst}")
         return None
 
@@ -34,7 +35,7 @@ class VirusTotal:
         data = json.dumps(self.vt_connect(url))
         json_resp = json.loads(data)
         if json_resp["response_code"] == 1:
-            try:
+            with contextlib.suppress(KeyError):
                 if json_resp["country"] and not json_resp["detected_urls"]:
                     print(f"{Tc.mag}= Reputation Unknown ={Tc.rst}")
                     print(f"  Owner: {json_resp['as_owner']}")
@@ -46,16 +47,16 @@ class VirusTotal:
                 elif json_resp["detected_urls"]:
                     print(f"\n{Tc.mag}= URLs ={Tc.rst}")
                     for k in json_resp["detected_urls"]:
-                        print(f"{Tc.red}>{Tc.rst} {k['url']}")
-                        print(f"  Positives: {k['positives']}")
-                        print(f"  Scan Date: {k['scan_date']}\n")
+                        self.positives(k, 'url', '  Scan Date: ', 'scan_date')
                 elif json_resp["detected_downloaded_samples"]:
                     print(f"\n{Tc.mag}= Hashes ={Tc.rst}")
                     for k in json_resp["detected_downloaded_samples"]:
-                        print(f"{Tc.red}>{Tc.rst} {k['sha256']}")
-                        print(f"  Positives: {k['positives']}")
-                        print(f"  Date: {k['date']}\n")
-            except KeyError:
-                pass
+                        self.positives(k, 'sha256', '  Date: ', 'date')
         elif json_resp["response_code"] == 0:
             print(Tc.clean)
+
+    @staticmethod
+    def positives(k, arg1, arg2, arg3):
+        print(f"{Tc.red}>{Tc.rst} {k[arg1]}")
+        print(f"  Positives: {k['positives']}")
+        print(f"{arg2}{k[arg3]}\n")

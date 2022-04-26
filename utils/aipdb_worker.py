@@ -1,7 +1,7 @@
 import sys
 
 import requests
-from requests.exceptions import HTTPError, RequestException, Timeout
+from requests.exceptions import HTTPError, RequestException
 
 from utils.termcolors import Termcolor as Tc
 
@@ -20,7 +20,7 @@ class AbuseIPDB:
 
         try:
             resp = requests.get(base_url, headers=headers, params=params).json()
-        except (HTTPError, RequestException, Timeout):
+        except (HTTPError, RequestException):
             print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{Tc.rst}")
         except KeyError:
             print("Missing data: Double-check ip and/or api key")
@@ -32,7 +32,7 @@ class AbuseIPDB:
                 print(f"{Tc.blacklisted} {''.join(ip)}")
                 print(f"{Tc.red}>{Tc.rst}  Last Reported: {report}")
                 print(f"{Tc.red}>{Tc.rst}  Confidence of Abuse is: {score}%")
-            elif ip and report is not None and score < 90:
+            elif ip and report is not None:
                 print(f"{Tc.red}>{Tc.rst}  Last Reported: {report}")
                 print(f"{Tc.red}>{Tc.rst}  Confidence of Abuse is: {score}%")
             else:

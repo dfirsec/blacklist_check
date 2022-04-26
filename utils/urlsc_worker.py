@@ -1,5 +1,5 @@
 import requests
-from requests.exceptions import HTTPError, RequestException, Timeout
+from requests.exceptions import HTTPError, RequestException
 
 from utils.termcolors import Termcolor as Tc
 
@@ -16,7 +16,7 @@ class URLScan:
     def url_scan(self):
         try:
             resp = requests.get(self.base_url, headers=self.headers, params=self.params).json()
-        except (HTTPError, RequestException, Timeout):
+        except (HTTPError, RequestException):
             print(f"    {Tc.error}{Tc.dl_error} {Tc.gray}{Tc.rst}")
         except KeyError:
             print(f"{Tc.error} Issue encountered with query")

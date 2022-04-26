@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import datetime
 import os
 import sys
@@ -103,7 +104,7 @@ def main():
         pbl.update_list()
 
     # check if file is older than 7 days
-    today = datetime.datetime.today()
+    today = datetime.datetime.now()
     filetime = datetime.datetime.fromtimestamp(blacklist.stat().st_mtime) - today
 
     if filetime.days <= -7:
@@ -122,49 +123,11 @@ def main():
 
         # Single ip check
         if len(args.query) == 1:
-            print(f"\n{Tc.dotsep}\n{Tc.green}[ Reputation Block List Check ]{Tc.rst}")
-            dbl.dnsbl_mapper(args.threads)
-
-            print(f"\n{Tc.dotsep}\n{Tc.green}[ IP-46 IP Intel Check ]{Tc.rst}")
-            pbl.ip46(args.query)
-
-            print(f"\n{Tc.dotsep}\n{Tc.green}[ URLhaus Check ]{Tc.rst}")
-            pbl.urlhaus(args.query)
-
-            print(f"\n{Tc.dotsep}\n{Tc.green}[ Threatfox Check ]{Tc.rst}")
-            pbl.threatfox(args.query)
-
-            print(f"\n{Tc.dotsep}\n{Tc.green}[ URLScan Check ]{Tc.rst}")
-            URLScan(args.query).url_scan()
-
-            # VirusTotal Query
-            if args.vt_query:
-                print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")
-                try:
-                    check_apikey("virustotal", VirusTotal).vt_run(ip_addrs)
-                except AttributeError:
-                    pass
-
-            # AbuseIPDB
-            if args.aipdb_query:
-                print(f"\n{Tc.dotsep}\n{Tc.green}[ AbuseIPDB Check ]{Tc.rst}")
-                try:
-                    check_apikey("abuseipdb", AbuseIPDB).aipdb_run(ip_addrs)
-                except AttributeError:
-                    pass
-
-            # Shodan
-            if args.shodan_query:
-                print(f"\n{Tc.dotsep}\n{Tc.green}[ Shodan Check ]{Tc.rst}")
-                try:
-                    check_apikey("shodan", ShodanIP).shodan_run(ip_addrs)
-                except AttributeError:
-                    pass
-
+            check_lists(dbl, args, pbl, ip_addrs)
     if args.file:
         pbl.outdated()
         try:
-            with open(args.file) as infile:
+            with open(args.file, encoding='utf-8') as infile:
                 ip_addrs = [line.strip() for line in infile.readlines()]
         except FileNotFoundError:
             sys.exit(f"{Tc.warning} No such file: {args.file}")
@@ -222,6 +185,39 @@ def main():
         sys.exit(f"{Tc.error} Exceeded max of 50 threads.{Tc.rst}")
 
 
+def check_lists(dbl, args, pbl, ip_addrs):
+    print(f"\n{Tc.dotsep}\n{Tc.green}[ Reputation Block List Check ]{Tc.rst}")
+    dbl.dnsbl_mapper(args.threads)
+
+    print(f"\n{Tc.dotsep}\n{Tc.green}[ IP-46 IP Intel Check ]{Tc.rst}")
+    pbl.ip46(args.query)
+
+    print(f"\n{Tc.dotsep}\n{Tc.green}[ URLhaus Check ]{Tc.rst}")
+    pbl.urlhaus(args.query)
+
+    print(f"\n{Tc.dotsep}\n{Tc.green}[ Threatfox Check ]{Tc.rst}")
+    pbl.threatfox(args.query)
+
+    print(f"\n{Tc.dotsep}\n{Tc.green}[ URLScan Check ]{Tc.rst}")
+    URLScan(args.query).url_scan()
+
+            # VirusTotal Query
+    if args.vt_query:
+        print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")
+        with contextlib.suppress(AttributeError):
+            check_apikey("virustotal", VirusTotal).vt_run(ip_addrs)
+            # AbuseIPDB
+    if args.aipdb_query:
+        print(f"\n{Tc.dotsep}\n{Tc.green}[ AbuseIPDB Check ]{Tc.rst}")
+        with contextlib.suppress(AttributeError):
+            check_apikey("abuseipdb", AbuseIPDB).aipdb_run(ip_addrs)
+            # Shodan
+    if args.shodan_query:
+        print(f"\n{Tc.dotsep}\n{Tc.green}[ Shodan Check ]{Tc.rst}")
+        with contextlib.suppress(AttributeError):
+            check_apikey("shodan", ShodanIP).shodan_run(ip_addrs)
+
+
 if __name__ == "__main__":
     banner = fr"""
         ____  __           __   ___      __     ________              __
@@ -235,7 +231,7 @@ if __name__ == "__main__":
     print(f"{Tc.cyan}{banner}{Tc.rst}")
 
     # check if python version
-    if not sys.version_info.major == 3 and sys.version_info.minor >= 8:
+    if sys.version_info.major != 3 and sys.version_info.minor >= 8:
         print("Python 3.8 or higher is required.")
         sys.exit(f"Your Python Version: {sys.version_info.major}.{sys.version_info.minor}")
 

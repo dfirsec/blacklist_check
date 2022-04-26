@@ -1,3 +1,4 @@
+import contextlib
 import fnmatch
 import ipaddress
 import json
@@ -95,26 +96,23 @@ class DNSBL:
                 alive.remove(match)
 
         diff = [x for x in alive if x not in feed_list]
-        if len(diff) > 1:
-            print(f"{Tc.green} [ Updating RBLs ]{Tc.rst}")
-            for item in diff:
-                if item not in feed_list:
-                    logger.success(f"[+] Adding {item}")
-                    feed_list.append(item)
-
-            with open(feeds, "w", encoding="utf-8") as json_file:
-                json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)
-        else:
+        if len(diff) <= 1:
             return False
+        print(f"{Tc.green} [ Updating RBLs ]{Tc.rst}")
+        for item in diff:
+            if item not in feed_list:
+                logger.success(f"[+] Adding {item}")
+                feed_list.append(item)
+
+        with open(feeds, "w", encoding="utf-8") as json_file:
+            json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)
         return None
 
     def resolve_dns(self, qry):
         """Return DNS Resolver."""
         try:
             self.resolver.nameservers = ["8.8.8.8", "8.8.4.4", "1.1.1.1", "9.9.9.9"]
-            answer = self.resolver.resolve(qry, "A")
-
-            return answer
+            return self.resolver.resolve(qry, "A")
 
         except (
             dns.resolver.NXDOMAIN,
@@ -128,7 +126,7 @@ class DNSBL:
         return None
 
     def dnsbl_query(self, blacklist):
-        host = str("".join(self.host))
+        host = "".join(self.host)
 
         # Return Codes
         codes = [
@@ -160,16 +158,14 @@ class DNSBL:
         try:
             qry = ip_address(host).reverse_pointer.replace(".in-addr.arpa", "") + "." + blacklist
         except Exception:
-            qry = host + "." + blacklist
+            qry = f"{host}.{blacklist}"
 
         answer = self.resolve_dns(qry)
 
-        try:
+        with contextlib.suppress(Exception):
             if any(str(answer[0]) in s for s in codes):
                 logger.success(f"{Tc.red}\u2716{Tc.rst}  Blacklisted > {blacklist}")
                 self.cnt += 1
-        except Exception:
-            pass
 
     def dnsbl_mapper(self, threads=None):
         with open(feeds, encoding="utf-8") as json_file:
@@ -179,8 +175,8 @@ class DNSBL:
         with ThreadPoolExecutor(max_workers=threads) as executor:
             executor.map(self.dnsbl_query, dnsbl)
 
-        host = str("".join(self.host))
         if self.cnt:
+            host = "".join(self.host)
             logger.warning(f"\n[*] {host} is listed in {self.cnt} block lists")
         else:
             print(Tc.clean)
@@ -212,12 +208,9 @@ class ProcessBL:
 
     def get_feeds(self, feed):
         ipv4 = re.compile(r"(?![0])\d+\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
-        try:
+        with contextlib.suppress(TypeError, OSError):
             results = trio.run(self.fetch, feed)
-            ip_addr = [ip.group() for ip in re.finditer(ipv4, results)]
-            return ip_addr
-        except (TypeError, OSError):
-            pass
+            return [ip.group() for ip in re.finditer(ipv4, results)]
         return None
 
     @staticmethod
@@ -281,21 +274,24 @@ class ProcessBL:
             if feed_list[feed]:
                 sys.exit(f'{Tc.warning} Feed "{feed}" already exists.')
         except KeyError:
-            feed_list.update({feed: url})
-            with open(feeds, "w", encoding="utf-8") as json_file:
-                json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)
-            print(f'[*] Added feed: "{feed}": "{url}"')
+            self.update_feeds(feed_list, feed, url, feeds_dict)
 
-            print(f"\n{Tc.cyan}[ Updating new feed ]{Tc.rst}")
-            with open(blklist, encoding="utf-8") as json_file:
-                bl_dict = json.load(json_file)
-                bl_list = bl_dict["Blacklists"]
+    def update_feeds(self, feed_list, feed, url, feeds_dict):
+        feed_list.update({feed: url})
+        with open(feeds, "w", encoding="utf-8") as json_file:
+            json.dump(feeds_dict, json_file, ensure_ascii=False, indent=4)
+        print(f'[*] Added feed: "{feed}": "{url}"')
 
-            bl_list.update({feed: self.get_feeds(url)})
-            with open(blklist, "w", encoding="utf-8") as json_file:
-                json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)
+        print(f"\n{Tc.cyan}[ Updating new feed ]{Tc.rst}")
+        with open(blklist, encoding="utf-8") as json_file:
+            bl_dict = json.load(json_file)
+            bl_list = bl_dict["Blacklists"]
 
-            print(f"{Tc.success} {Tc.yellow}{len(bl_list[feed]):,}{Tc.rst} IPs added to '{feed}'")
+        bl_list.update({feed: self.get_feeds(url)})
+        with open(blklist, "w", encoding="utf-8") as json_file:
+            json.dump(bl_dict, json_file, ensure_ascii=False, indent=4)
+
+        print(f"{Tc.success} {Tc.yellow}{len(bl_list[feed]):,}{Tc.rst} IPs added to '{feed}'")
 
     @staticmethod
     def remove_feed():
@@ -306,9 +302,7 @@ class ProcessBL:
             for num, (key, val) in enumerate(feed_list.items(), start=1):
                 print(f"{Tc.cyan}{num:2}){Tc.rst} {key:25}{val}")
         try:
-            # remove from feeds
-            opt = int(input("\nPlease select your choice by number, or Ctrl-C to cancel: "))
-            opt = opt - 1  # subtract 1 as enumerate starts at 1
+            opt = int(input("\nPlease select your choice by number, or Ctrl-C to cancel: ")) - 1
             choice = list(feed_list)[opt]
             del feed_list[choice]
             with open(feeds, "w", encoding="utf8") as json_file:
@@ -330,7 +324,6 @@ class ProcessBL:
 
     def ip_matches(self, ip_addrs):
         found = []
-        # finder = ContactFinder()
 
         print(f"\n{Tc.dotsep}\n{Tc.green}[ Local Blacklist Check ]{Tc.rst}")
 
@@ -351,7 +344,7 @@ class ProcessBL:
                             found.append(ip)
 
                 except KeyboardInterrupt:
-                    sys.exit()
+                    sys.exit("Exited!")
                 except TypeError:
                     continue
 
@@ -410,9 +403,13 @@ class ProcessBL:
     def geo_locate(ip_addr):
         """Returns IP address geolocation."""
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
+        url = f"https://freegeoip.live/json/{ip_addr}"
         try:
-            url = f"https://freegeoip.live/json/{ip_addr}"
             resp = requests.get(url, headers=headers)
+            resp.raise_for_status()
+        except Exception as err:
+            print(f"[Error] {err}\n")
+        else:
             if resp.status_code == 200:
                 data = json.loads(resp.content.decode("utf-8"))
                 city = data["city"]
@@ -424,9 +421,6 @@ class ProcessBL:
                 if city:
                     return f"{city}, {country} ({iso_code})"
                 return f"{country} ({iso_code})"
-            resp.raise_for_status()
-        except Exception as err:
-            print(f"[Error] {err}\n")
         return None
 
     @staticmethod
@@ -437,12 +431,8 @@ class ProcessBL:
         except Exception as err:
             return f"Whois failed: {err}"
         else:
-            org = ""
-            email = ""
-            if results.parser_output["organization"]:
-                org = results.parser_output["organization"]
-            if results.parser_output["abuse_email"]:
-                email = results.parser_output["abuse_email"]
+            org = results.parser_output["organization"] or ""
+            email = results.parser_output["abuse_email"] or ""
             return org, email
 
     @staticmethod
@@ -450,7 +440,7 @@ class ProcessBL:
         """Check feed list age."""
         try:
             file_time = os.path.getmtime(blklist)
-            if (time.time() - file_time) / 3600 > 24:
+            if time.time() - file_time > 86400:
                 return True
         except Exception as err:
             sys.exit(err)
@@ -463,13 +453,13 @@ class ProcessBL:
         ip_addr = "".join(ip_addr)
         url = f"https://ip-46.com/{ip_addr}"
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
-        r = requests.get(url, headers=headers)
-        soup = BeautifulSoup(r.text, features="lxml")
+        resp = requests.get(url, headers=headers)
+        soup = BeautifulSoup(resp.text, features="lxml")
         metadata = soup.find("meta")
 
         detection = soup.title.get_text()
         if "No abuse detected" not in detection:
-            print(". ".join(metadata["content"].split(". ")[0:2]).split("IP-46.com", 1)[0])
+            print(". ".join(metadata["content"].split(". ")[:2]).split("IP-46.com", 1)[0])
             return detection
         print(Tc.clean)
         return None
@@ -490,18 +480,13 @@ class ProcessBL:
                 for k in resp["urls"]:
                     if k["url_status"] == "online":
                         print(f"Status: {Tc.red}{k['url_status'].title()}{Tc.rst}")
-                        print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
-                        if k["tags"]:
-                            print(f"Tags: {', '.join(k['tags'])}\n")
-                        else:
-                            print("\n")
                     else:
                         print(f"Status: {k['url_status'].title()}")
-                        print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
-                        if k["tags"]:
-                            print(f"Tags: {', '.join(k['tags'])}\n")
-                        else:
-                            print("\n")
+                    print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
+                    if k["tags"]:
+                        print(f"Tags: {', '.join(k['tags'])}\n")
+                    else:
+                        print("\n")
         except (TypeError, KeyError):
             return None
         return None
