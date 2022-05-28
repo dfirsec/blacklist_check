@@ -13,7 +13,7 @@ from pathlib import Path
 import urllib3
 
 from utils.aipdb_worker import AbuseIPDB
-from utils.main_worker import ProcessBL, DNSBL
+from utils.main_worker import DNSBL, ProcessBL
 from utils.shodan_worker import ShodanIP
 from utils.termcolors import Termcolor as Tc
 from utils.urlsc_worker import URLScan
@@ -124,10 +124,11 @@ def main():
         # Single ip check
         if len(args.query) == 1:
             check_lists(dbl, args, pbl, ip_addrs)
+
     if args.file:
         pbl.outdated()
         try:
-            with open(args.file, encoding='utf-8') as infile:
+            with open(args.file, encoding="utf-8") as infile:
                 ip_addrs = [line.strip() for line in infile.readlines()]
         except FileNotFoundError:
             sys.exit(f"{Tc.warning} No such file: {args.file}")
@@ -201,7 +202,7 @@ def check_lists(dbl, args, pbl, ip_addrs):
     print(f"\n{Tc.dotsep}\n{Tc.green}[ URLScan Check ]{Tc.rst}")
     URLScan(args.query).url_scan()
 
-            # VirusTotal Query
+    # VirusTotal Query
     if args.vt_query:
         print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")
         with contextlib.suppress(AttributeError):
@@ -219,7 +220,7 @@ def check_lists(dbl, args, pbl, ip_addrs):
 
 
 if __name__ == "__main__":
-    banner = fr"""
+    banner = rf"""
         ____  __           __   ___      __     ________              __
        / __ )/ /___ ______/ /__/ (_)____/ /_   / ____/ /_  ___  _____/ /__
       / __  / / __ `/ ___/ //_/ / / ___/ __/  / /   / __ \/ _ \/ ___/ //_/

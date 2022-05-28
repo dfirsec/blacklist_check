@@ -47,11 +47,11 @@ class VirusTotal:
                 elif json_resp["detected_urls"]:
                     print(f"\n{Tc.mag}= URLs ={Tc.rst}")
                     for k in json_resp["detected_urls"]:
-                        self.positives(k, 'url', '  Scan Date: ', 'scan_date')
+                        self.positives(k, "url", "  Scan Date: ", "scan_date")
                 elif json_resp["detected_downloaded_samples"]:
                     print(f"\n{Tc.mag}= Hashes ={Tc.rst}")
                     for k in json_resp["detected_downloaded_samples"]:
-                        self.positives(k, 'sha256', '  Date: ', 'date')
+                        self.positives(k, "sha256", "  Date: ", "date")
         elif json_resp["response_code"] == 0:
             print(Tc.clean)
 
