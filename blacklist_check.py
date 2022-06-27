@@ -206,17 +206,17 @@ def check_lists(dbl, args, pbl, ip_addrs):
     if args.vt_query:
         print(f"\n{Tc.dotsep}\n{Tc.green}[ VirusTotal Check ]{Tc.rst}")
         with contextlib.suppress(AttributeError):
-            check_apikey("virustotal", VirusTotal).vt_run(ip_addrs)
+            check_apikey("virustotal", VirusTotal).vt_run(ip_addrs)  # type: ignore
             # AbuseIPDB
     if args.aipdb_query:
         print(f"\n{Tc.dotsep}\n{Tc.green}[ AbuseIPDB Check ]{Tc.rst}")
         with contextlib.suppress(AttributeError):
-            check_apikey("abuseipdb", AbuseIPDB).aipdb_run(ip_addrs)
+            check_apikey("abuseipdb", AbuseIPDB).aipdb_run(ip_addrs)  # type: ignore
             # Shodan
     if args.shodan_query:
         print(f"\n{Tc.dotsep}\n{Tc.green}[ Shodan Check ]{Tc.rst}")
         with contextlib.suppress(AttributeError):
-            check_apikey("shodan", ShodanIP).shodan_run(ip_addrs)
+            check_apikey("shodan", ShodanIP).shodan_run(ip_addrs)  # type: ignore
 
 
 if __name__ == "__main__":

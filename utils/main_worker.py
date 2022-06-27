@@ -65,8 +65,8 @@ class DNSBL:
         self.threads = threads
         self.cnt = 0
         self.resolver = dns.resolver.Resolver()
-        self.resolver.timeout = 1
-        self.resolver.lifetime = 1
+        self.resolver.timeout = 1  # type: ignore
+        self.resolver.lifetime = 1  # type: ignore
 
     @staticmethod
     def update_dnsbl():
@@ -74,7 +74,7 @@ class DNSBL:
         url = "https://multirbl.valli.org/list/"
         page = requests.get(url).text
         soup = BeautifulSoup(page, "html.parser")
-        table_rows = soup.find("table").find_all("tr")
+        table_rows = soup.find("table").find_all("tr")  # type: ignore
 
         alive = []
         for row in table_rows:
@@ -163,7 +163,7 @@ class DNSBL:
         answer = self.resolve_dns(qry)
 
         with contextlib.suppress(Exception):
-            if any(str(answer[0]) in s for s in codes):
+            if any(str(answer[0]) in s for s in codes):  # type: ignore
                 logger.success(f"{Tc.red}\u2716{Tc.rst}  Blacklisted > {blacklist}")
                 self.cnt += 1
 
@@ -453,16 +453,20 @@ class ProcessBL:
         ip_addr = "".join(ip_addr)
         url = f"https://ip-46.com/{ip_addr}"
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0"}
-        resp = requests.get(url, headers=headers)
-        soup = BeautifulSoup(resp.text, features="lxml")
-        metadata = soup.find("meta")
-
-        detection = soup.title.get_text()
-        if "No abuse detected" not in detection:
-            print(". ".join(metadata["content"].split(". ")[:2]).split("IP-46.com", 1)[0])
-            return detection
-        print(Tc.clean)
-        return None
+        try:
+            resp = requests.get(url, headers=headers, timeout=5)
+            resp.raise_for_status()
+        except (ConnectionError, requests.exceptions.ConnectTimeout) as err:
+            print(f"[Error] Connection Error: {err}")
+        else:
+            soup = BeautifulSoup(resp.text, features="lxml")
+            metadata = soup.find("meta")
+            detection = soup.title.get_text()  # type: ignore
+            if "No abuse detected" not in detection:
+                print(". ".join(metadata["content"].split(". ")[:2]).split("IP-46.com", 1)[0])  # type: ignore
+                return detection
+            print(Tc.clean)
+            return None
 
     @staticmethod
     def urlhaus(ip_addr):
@@ -470,26 +474,29 @@ class ProcessBL:
         url = "https://urlhaus-api.abuse.ch/v1/host/"
         headers = CaseInsensitiveDict([("Accept", "application/json")])
         data = {"host": ip_addr}
-        resp = requests.post(url, headers=headers, data=data).json()
-
         try:
-            if resp["query_status"] == "no_results":
-                print(Tc.clean)
+            resp = requests.post(url, headers=headers, data=data).json()
+        except (ConnectionError, requests.exceptions.ConnectTimeout) as err:
+            print(f"[Error] Connection Error: {err}")
+        else:
+            try:
+                if resp["query_status"] == "no_results":
+                    print(Tc.clean)
 
-            if resp["urls"]:
-                for k in resp["urls"]:
-                    if k["url_status"] == "online":
-                        print(f"Status: {Tc.red}{k['url_status'].title()}{Tc.rst}")
-                    else:
-                        print(f"Status: {k['url_status'].title()}")
-                    print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
-                    if k["tags"]:
-                        print(f"Tags: {', '.join(k['tags'])}\n")
-                    else:
-                        print("\n")
-        except (TypeError, KeyError):
+                if resp["urls"]:
+                    for k in resp["urls"]:
+                        if k["url_status"] == "online":
+                            print(f"Status: {Tc.red}{k['url_status'].title()}{Tc.rst}")
+                        else:
+                            print(f"Status: {k['url_status'].title()}")
+                        print(f"{k['threat'].replace('_', ' ').title():12}: {k['url']}")
+                        if k["tags"]:
+                            print(f"Tags: {', '.join(k['tags'])}\n")
+                        else:
+                            print("\n")
+            except (TypeError, KeyError):
+                return None
             return None
-        return None
 
     @staticmethod
     def threatfox(ip_addr):
