@@ -233,7 +233,7 @@ if __name__ == "__main__":
 
     # check if python version
     if sys.version_info.major != 3 and sys.version_info.minor >= 8:
-        print("Python 3.8 or higher is required.")
-        sys.exit(f"Your Python Version: {sys.version_info.major}.{sys.version_info.minor}")
+        print("Python 3.8 or higher is needed.")
+        print(f"Your Python Version: {sys.version_info.major}.{sys.version_info.minor}")
 
     main()
