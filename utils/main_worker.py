@@ -24,11 +24,14 @@ import urllib3
 import verboselogs
 from bs4 import BeautifulSoup
 from requests.structures import CaseInsensitiveDict
-
+from trio import TrioDeprecationWarning
 from utils.termcolors import Termcolor as Tc
 
+# suppress trio/httpx deprecation warning
+warnings.filterwarnings(action="ignore", category=TrioDeprecationWarning)
+
 # suppress dnspython feature deprecation warning
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings(action="ignore", category=DeprecationWarning)
 
 # suppress certificate verification
 urllib3.disable_warnings()
@@ -168,6 +171,12 @@ class DNSBL:
                 self.cnt += 1
 
     def dnsbl_mapper(self, threads=None):
+        """
+        Takes a list of DNSBLs, and for each DNSBL, it queries the DNSBL for the IP address, and if the
+        query returns a result, it prints out the DNSBL name and the result
+
+        :param threads: The number of threads to use
+        """
         with open(feeds, encoding="utf-8") as json_file:
             data = json.load(json_file)
         dnsbl = list(data["DNS Blacklists"]["DNSBL"])
@@ -183,15 +192,16 @@ class DNSBL:
 
 
 class ProcessBL:
-    @staticmethod
-    def clear_screen():
+    def clear_screen(self):
+        """
+        Clears the screen with the cls command, otherwise clear the screen with the clear command
+        """
         if platform.system() == "Windows":
             os.system("cls")
         else:
             os.system("clear")
 
-    @staticmethod
-    async def fetch(url):
+    async def fetch(self, url):
         headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/89.0"}
         async with httpx.AsyncClient(verify=False) as client:
             try:
@@ -207,21 +217,25 @@ class ProcessBL:
                 return resp.text
 
     def get_feeds(self, feed):
+        """
+        Returns a list of IPv4 addresses found in the response body
+
+        :param feed: The URL of the feed
+        :return: A list of IP addresses.
+        """
         ipv4 = re.compile(r"(?![0])\d+\.\d{1,3}\.\d{1,3}\.(?![0])\d{1,3}")
         with contextlib.suppress(TypeError, OSError):
             results = trio.run(self.fetch, feed)
             return [ip.group() for ip in re.finditer(ipv4, results)]
         return None
 
-    @staticmethod
-    def read_list():
+    def read_list(self):
         """Returns the name and url for each feed."""
         with open(feeds, encoding="utf-8") as json_file:
             data = json.load(json_file)
             return [[name, url] for name, url in data["Blacklist Feeds"].items()]
 
-    @staticmethod
-    def sort_list(data):
+    def sort_list(self, data):
         """Sorts lists by name and count."""
         sort_name = sorted((name, ip_cnt) for (name, ip_cnt) in data["Blacklists"].items())
         for num, idx in enumerate(sort_name, start=1):
