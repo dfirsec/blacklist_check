@@ -79,7 +79,14 @@ def parser():
 
 
 def check_apikey(name, query_type):
-    """Verifies API Key."""
+    """
+    Checks if the API key is in the config file, if it is, it returns the API key, if not, it returns
+    None
+
+    :param name: The name of the API you're using
+    :param query_type: This is the class that will be used to query the API
+    :return: the name of the query type.
+    """
     if not config.get(f"{name}", "api_key"):
         print(f"Please add {name} api key to the '{settings.name}' file")
     else:
@@ -187,6 +194,15 @@ def main():
 
 
 def check_lists(dbl, args, pbl, ip_addrs):
+    """
+    Checks a list of IP addresses against a number of different threat intelligence sources
+
+    :param dbl: DNS Block List
+    :param args: Namespace(aipdb_query=False, dnsbl_query=True, query='1.1.1.1', shodan_query=False,
+    threads=10, vt_query=False)
+    :param pbl:
+    :param ip_addrs: list of IP addresses
+    """
     print(f"\n{Tc.dotsep}\n{Tc.green}[ Reputation Block List Check ]{Tc.rst}")
     dbl.dnsbl_mapper(args.threads)
 
@@ -220,7 +236,7 @@ def check_lists(dbl, args, pbl, ip_addrs):
 
 
 if __name__ == "__main__":
-    banner = rf"""
+    BANNER = rf"""
         ____  __           __   ___      __     ________              __
        / __ )/ /___ ______/ /__/ (_)____/ /_   / ____/ /_  ___  _____/ /__
       / __  / / __ `/ ___/ //_/ / / ___/ __/  / /   / __ \/ _ \/ ___/ //_/
@@ -229,7 +245,7 @@ if __name__ == "__main__":
                                                                 {__version__}
     """
 
-    print(f"{Tc.cyan}{banner}{Tc.rst}")
+    print(f"{Tc.cyan}{BANNER}{Tc.rst}")
 
     # check if python version
     if sys.version_info.major != 3 and sys.version_info.minor >= 8:
